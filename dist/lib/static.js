@@ -1,0 +1,7 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const serve = require("koa-static");
+const maiusStatic = (staticPath, opts) => serve(staticPath, opts);
+exports.default = maiusStatic;
+
+//# sourceMappingURL=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uL3NyYy9saWIvc3RhdGljLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7O0FBQUEsb0NBQW9DO0FBRXBDLE1BQU0sV0FBVyxHQUFHLENBQUMsVUFBVSxFQUFFLElBQUksRUFBRSxFQUFFLENBQUMsS0FBSyxDQUFDLFVBQVUsRUFBRSxJQUFJLENBQUMsQ0FBQztBQUVsRSxrQkFBZSxXQUFXLENBQUMiLCJmaWxlIjoibGliL3N0YXRpYy5qcyIsInNvdXJjZXNDb250ZW50IjpbImltcG9ydCAqIGFzIHNlcnZlIGZyb20gJ2tvYS1zdGF0aWMnO1xuXG5jb25zdCBtYWl1c1N0YXRpYyA9IChzdGF0aWNQYXRoLCBvcHRzKSA9PiBzZXJ2ZShzdGF0aWNQYXRoLCBvcHRzKTtcblxuZXhwb3J0IGRlZmF1bHQgbWFpdXNTdGF0aWM7XG4iXX0=

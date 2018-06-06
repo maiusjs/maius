@@ -1,0 +1,8 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const base_1 = require("./base");
+class ServiceLoader extends base_1.default {
+}
+exports.default = ServiceLoader;
+
+//# sourceMappingURL=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uL3NyYy9sb2FkZXIvc2VydmljZS50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOztBQUFBLGlDQUFnQztBQVFoQyxtQkFBbUMsU0FBUSxjQUFVO0NBQ3BEO0FBREQsZ0NBQ0MiLCJmaWxlIjoibG9hZGVyL3NlcnZpY2UuanMiLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgQmFzZUxvYWRlciBmcm9tICcuL2Jhc2UnO1xuXG4vKipcbiAqIHNlcnZpY2UgbG9hZGVyLlxuICpcbiAqIEBwYXJhbSB7T2JqZWN0fSBvcHRzXG4gKi9cblxuZXhwb3J0IGRlZmF1bHQgY2xhc3MgU2VydmljZUxvYWRlciBleHRlbmRzIEJhc2VMb2FkZXIge1xufVxuIl19
