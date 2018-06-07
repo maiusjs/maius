@@ -1,6 +1,8 @@
 import * as assert from 'assert';
 import * as Debug from 'debug';
 import * as path from 'path';
+import * as fs from 'fs';
+
 import IUserConfig from '../interface/i-user-config';
 import IUserOptions from '../interface/i-user-options';
 
@@ -55,36 +57,37 @@ export default class MiddlewareLoader {
 
     // config.middleware 数组每一项下可以接受两种类型的值：string, object
     middlewareConfig.forEach((item, index) => {
-      // 第一种情况：string
-      if (typeof item === 'string') {
-        const func = require(path.join(middlewareDir, `${item}.js`));
-        assert(typeof func === 'function', 'middleware must be an function');
 
-        middleware.push(func());
-        return;
+      if (typeof item === 'string') {
+        item = {
+          name:  item
+        };
       }
 
-      // 第二种：Object { name, options, afterRouter }
+      item.afterRouter = item.afterRouter || false;
+      item.args = item.args || [];
+      if(item.options) {
+        item.args.push(item.options);
+      }
+
       assert(
         item.name && typeof item.name === 'string',
         `middleware[${index}].name need string type value`,
       );
 
-      const opt = {
-        afterRouter: item.afterRouter || false,
-        name: item.name,
-        options: item.options,
-      };
+      const filename = path.join(middlewareDir, `${item.name}.js`);
+      const func = fs.existsSync(filename) ?
+        require(filename) :
+        require(item.name);
 
-      const fn = require(path.join(middlewareDir, `${opt.name}.js`));
-      assert(typeof fn === 'function', 'middleware must be an function');
-
-      if (!opt.afterRouter) {
-        middleware.push(fn(opt.options));
+      assert(typeof func === 'function', 'middleware must be an function');
+      const ret = func.apply(this, item.args);
+      if (!item.afterRouter) {
+        middleware.push(ret);
         return;
       }
 
-      afterRouterMiddleware.push(fn(opt.options));
+      afterRouterMiddleware.push(ret);
     });
 
     this[MIDDLEWARE] = {
