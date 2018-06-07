@@ -4,6 +4,7 @@ import * as path from 'path';
 import { isFunction } from 'util';
 import FileItemModel from '../models/loader/file-item-model';
 import { isObject } from '../utils/index';
+import BaseContext from '../lib/base-context';
 
 export default abstract class BaseLoader {
   public path: string;
@@ -25,7 +26,7 @@ export default abstract class BaseLoader {
    * @since 0.1.0
    */
 
-  public getIntancesCol(): any {
+  public getIntancesCol(): { [x: string]: BaseContext } {
     const col = {};
 
     this.getFiles().forEach(item => {

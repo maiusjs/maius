@@ -1,8 +1,8 @@
 import * as assert from 'assert';
 import * as Debug from 'debug';
-import * as path from 'path';
 import * as fs from 'fs';
-
+import { Middleware } from 'koa';
+import * as path from 'path';
 import IUserConfig from '../interface/i-user-config';
 import IUserOptions from '../interface/i-user-options';
 
@@ -30,15 +30,15 @@ export default class MiddlewareLoader {
    */
 
   public getMiddlewera():
-  { middleware: (() => void)[], afterRouterMiddleware: (() => void)[] } {
+  { middleware: Middleware[], afterRouterMiddleware: Middleware[] } {
     if (this[MIDDLEWARE]) return this[MIDDLEWARE];
 
     // 将中间件分成两种类型，根据 middleware.config[n].afterRouter 字段来区分
     // afterRouterMiddleware: 这一类的中间件将会在 router之后执行
     // middleware: 这一类的中间件将会在 router 之前执行
 
-    const middleware: (() => void)[] = [];
-    const afterRouterMiddleware: (() => void)[] = [];
+    const middleware: Middleware[] = [];
+    const afterRouterMiddleware: Middleware[] = [];
 
     const config: IUserConfig = require(path.join(this.options.rootDir, 'config.js'));
     const middlewareDir = path.join(this.options.rootDir, 'middleware');
@@ -57,37 +57,45 @@ export default class MiddlewareLoader {
 
     // config.middleware 数组每一项下可以接受两种类型的值：string, object
     middlewareConfig.forEach((item, index) => {
+      const cfg = {
+        afterRouter: null,
+        args: null,
+        name: null,
+      };
 
       if (typeof item === 'string') {
-        item = {
-          name:  item
-        };
+        cfg.name = item;
+      } else {
+        cfg.name = item.name;
       }
 
-      item.afterRouter = item.afterRouter || false;
-      item.args = item.args || [];
-      if(item.options) {
-        item.args.push(item.options);
+      cfg.afterRouter = cfg.afterRouter || false;
+      cfg.args = cfg.args || [];
+
+      if (typeof item !== 'string' && item.options) {
+        cfg.args.push(item.options);
       }
 
       assert(
-        item.name && typeof item.name === 'string',
+        cfg.name && typeof cfg.name === 'string',
         `middleware[${index}].name need string type value`,
       );
 
-      const filename = path.join(middlewareDir, `${item.name}.js`);
+      const filename = path.join(middlewareDir, `${cfg.name}.js`);
       const func = fs.existsSync(filename) ?
         require(filename) :
-        require(item.name);
+        require(cfg.name);
 
       assert(typeof func === 'function', 'middleware must be an function');
-      const ret = func.apply(this, item.args);
-      if (!item.afterRouter) {
-        middleware.push(ret);
+
+      const fn = func.apply(this, cfg.args);
+
+      if (!cfg.afterRouter) {
+        middleware.push(fn);
         return;
       }
 
-      afterRouterMiddleware.push(ret);
+      afterRouterMiddleware.push(fn);
     });
 
     this[MIDDLEWARE] = {

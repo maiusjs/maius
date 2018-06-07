@@ -6,12 +6,10 @@ export default class Router extends KoaRouter {
   /**
    * @constructor
    * @param {object} opts koa-router options
-   * @param {Maius} maius Maius instance
    */
 
-  constructor(opts, maius) {
+  constructor(opts: KoaRouter.IRouterOptions) {
     super(opts);
-    this.maius = maius;
   }
 
   /**

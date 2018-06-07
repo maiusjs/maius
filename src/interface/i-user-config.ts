@@ -1,8 +1,12 @@
 export default interface IUserConfig {
-  middleware?: string | { name: string, args?: any[], options?: any, afterRouter?: boolean }[];
+  middleware?: (string | {
+    name: string,
+    args?: any[],
+    options?: any,
+    afterRouter?: boolean,
+  })[];
   static: any;
 }
-
 
 // module.exports = {
 //   middleware: [

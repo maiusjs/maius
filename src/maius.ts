@@ -1,6 +1,7 @@
 import * as assert from 'assert';
 import * as Debug from 'debug';
 import * as fs from 'fs';
+import { Middleware } from 'koa';
 import * as path from 'path';
 import IUserOptions from './interface/i-user-options';
 import Application from './lib/application';
@@ -61,7 +62,7 @@ class Maius {
      *
      * @since 0.1.0
      */
-    this.router = new Router({}, this);
+    this.router = new Router({});
 
     /**
      * controller instances collection
@@ -245,7 +246,7 @@ class Maius {
    * @since 0.1.0
    */
 
-  get middleware(): (() => void)[] {
+  get middleware(): Middleware[] {
     return this.middlewareLoader.getMiddlewera().middleware;
   }
 
@@ -255,7 +256,7 @@ class Maius {
    * @since 0.1.0
    */
 
-  get afterRouterMiddleware(): (() => void)[] {
+  get afterRouterMiddleware(): Middleware[] {
     return this.middlewareLoader.getMiddlewera().afterRouterMiddleware;
   }
 
