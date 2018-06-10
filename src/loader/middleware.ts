@@ -9,6 +9,12 @@ import IUserOptions from '../interface/i-user-options';
 const debug = Debug('maius:middlewareLoader');
 const MIDDLEWARE = Symbol('middleware');
 
+interface ICfg {
+  afterRouter: boolean;
+  args: any[];
+  name: string;
+}
+
 export default class MiddlewareLoader {
   public options: IUserOptions;
 
@@ -57,7 +63,7 @@ export default class MiddlewareLoader {
 
     // config.middleware 数组每一项下可以接受两种类型的值：string, object
     middlewareConfig.forEach((item, index) => {
-      const cfg = {
+      const cfg: ICfg = {
         afterRouter: null,
         args: null,
         name: null,
@@ -82,13 +88,13 @@ export default class MiddlewareLoader {
       );
 
       const filename = path.join(middlewareDir, `${cfg.name}.js`);
-      const func = fs.existsSync(filename) ?
+      const func: () => Middleware = fs.existsSync(filename) ?
         require(filename) :
         require(cfg.name);
 
       assert(typeof func === 'function', 'middleware must be an function');
 
-      const fn = func.apply(this, cfg.args);
+      const fn: Middleware = func().apply(this, cfg.args);
 
       if (!cfg.afterRouter) {
         middleware.push(fn);
