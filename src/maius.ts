@@ -212,7 +212,9 @@ class Maius {
    */
 
   private loadUserRoutes(): void {
-    require(path.join(this.options.rootDir, 'router.js'))({
+    const router = require(path.join(this.options.rootDir, 'router.js'))
+    assert('function' === typeof router, 'router.js must be a function type!');
+    router({
       controller: this.controller,
       router: this.router,
     });
