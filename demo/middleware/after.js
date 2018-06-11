@@ -1,5 +1,5 @@
-module.exports = options => async (ctx, next) => {
-  // options && options.name && (ctx.name = options.name);
-  console.log('After middleware will be called after router');
+module.exports = options => async function after(ctx, next) {
+  console.log('After inner');
   await next();
+  console.log('After outer');
 };

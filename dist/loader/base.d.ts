@@ -1,19 +1,12 @@
-import Maius from '../maius';
-interface IOptions {
+import FileItemModel from '../models/loader/file-item-model';
+import BaseContext from '../lib/base-context';
+export default abstract class BaseLoader {
     path: string;
-}
-interface IFileItem {
-    name: string;
-    path: string;
-}
-export default class BaseLoader {
-    path: string;
-    maius: Maius;
-    private files;
-    constructor(options: IOptions);
-    getIntancesCol<T>(): {
-        [x: string]: T;
+    constructor(options: {
+        path?: string;
+    });
+    getIntancesCol(): {
+        [x: string]: BaseContext;
     };
-    protected getFiles(): IFileItem[];
+    protected getFiles(): FileItemModel[];
 }
-export {};

@@ -1,5 +1,7 @@
+import IUserConfig from '../interface/i-user-config';
+import IUserOptions from '../interface/i-user-options';
 export default class UserConfigLoader {
-    maius: any;
-    constructor(maius: any);
-    readonly config: object;
+    options: IUserOptions;
+    constructor(options: IUserOptions);
+    readonly config: IUserConfig;
 }

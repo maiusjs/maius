@@ -1,19 +1,22 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const fs = require("fs");
 const path = require("path");
 const CONTENT = Symbol('content');
 class UserConfigLoader {
-    constructor(maius) {
-        this.maius = maius;
+    constructor(options) {
+        this.options = options;
     }
     get config() {
         if (this[CONTENT]) {
             return this[CONTENT];
         }
-        this[CONTENT] = require(path.join(this.maius.options.rootDir, 'config.js'));
+        const filename = path.join(this.options.rootDir, 'config.js');
+        if (!fs.statSync(filename)) {
+            throw new Error('Not found config.js in project root directory!');
+        }
+        this[CONTENT] = require(filename);
         return this[CONTENT];
     }
 }
 exports.default = UserConfigLoader;
-
-//# sourceMappingURL=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uL3NyYy9sb2FkZXIvdXNlci1jb25maWcudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7QUFBQSw2QkFBNkI7QUFFN0IsTUFBTSxPQUFPLEdBQUcsTUFBTSxDQUFDLFNBQVMsQ0FBQyxDQUFDO0FBRWxDO0lBUUUsWUFBWSxLQUFLO1FBQ2YsSUFBSSxDQUFDLEtBQUssR0FBRyxLQUFLLENBQUM7SUFDckIsQ0FBQztJQU1ELElBQUksTUFBTTtRQUNSLElBQUksSUFBSSxDQUFDLE9BQU8sQ0FBQyxFQUFFO1lBQUUsT0FBTyxJQUFJLENBQUMsT0FBTyxDQUFDLENBQUM7U0FBRTtRQUU1QyxJQUFJLENBQUMsT0FBTyxDQUFDLEdBQUcsT0FBTyxDQUFDLElBQUksQ0FBQyxJQUFJLENBQUMsSUFBSSxDQUFDLEtBQUssQ0FBQyxPQUFPLENBQUMsT0FBTyxFQUFFLFdBQVcsQ0FBQyxDQUFDLENBQUM7UUFDNUUsT0FBTyxJQUFJLENBQUMsT0FBTyxDQUFDLENBQUM7SUFDdkIsQ0FBQztDQUNGO0FBdEJELG1DQXNCQyIsImZpbGUiOiJsb2FkZXIvdXNlci1jb25maWcuanMiLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgKiBhcyBwYXRoIGZyb20gJ3BhdGgnO1xuXG5jb25zdCBDT05URU5UID0gU3ltYm9sKCdjb250ZW50Jyk7XG5cbmV4cG9ydCBkZWZhdWx0IGNsYXNzIFVzZXJDb25maWdMb2FkZXIge1xuICBwdWJsaWMgbWFpdXM6IGFueTtcblxuICAvKipcbiAgICogQGNvbnN0cnVjdG9yXG4gICAqIEBwYXJhbSBtYWl1cyBNYWl1cyBpbnN0YW5jZVxuICAgKi9cblxuICBjb25zdHJ1Y3RvcihtYWl1cykge1xuICAgIHRoaXMubWFpdXMgPSBtYWl1cztcbiAgfVxuXG4gIC8qKlxuICAgKiBAc2luY2UgMC4xLjBcbiAgICovXG5cbiAgZ2V0IGNvbmZpZygpOiBvYmplY3Qge1xuICAgIGlmICh0aGlzW0NPTlRFTlRdKSB7IHJldHVybiB0aGlzW0NPTlRFTlRdOyB9XG5cbiAgICB0aGlzW0NPTlRFTlRdID0gcmVxdWlyZShwYXRoLmpvaW4odGhpcy5tYWl1cy5vcHRpb25zLnJvb3REaXIsICdjb25maWcuanMnKSk7XG4gICAgcmV0dXJuIHRoaXNbQ09OVEVOVF07XG4gIH1cbn1cbiJdfQ==

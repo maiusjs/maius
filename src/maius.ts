@@ -1,13 +1,11 @@
 import * as assert from 'assert';
 import * as Debug from 'debug';
-import * as fs from 'fs';
 import { Middleware } from 'koa';
 import * as path from 'path';
 import IUserOptions from './interface/i-user-options';
 import Application from './lib/application';
 import BaseContext from './lib/base-context';
-import Router from './lib/router';
-import maiusStatic from './lib/static';
+import Router from './lib/middleware/router';
 import ControllerLoader from './loader/controller';
 import MiddlewareLoader from './loader/middleware';
 import ServiceLoader from './loader/service';
@@ -29,6 +27,8 @@ class Maius {
   public router: Router;
   public controller: { [x: string]: BaseContext };
   public service: { [x: string]: BaseContext };
+
+  private middleware: Middleware[];
 
   /**
    * @constructor
@@ -71,7 +71,7 @@ class Maius {
      */
     this.controller = this.controllerLoader.getIntancesCol();
 
-    debug('%o %o', 'this.controller', this.controller);
+    debug('this.controller %o', this.controller);
 
     /**
      * service instances collection
@@ -80,22 +80,16 @@ class Maius {
      */
     this.service = this.serviceLoader.getIntancesCol();
 
-    debug('%o %o', 'this.service', this.service);
+    debug('this.service %o', this.service);
+
+    /**
+     * @private
+     */
+    this.middleware = this.middlewareLoader.getMiddleware();
 
     this.setControllerAndServiceProps();
-
+    this.loadUserRoutes();
     this.useMiddleware();
-
-    debug(
-      '%o %o %o',
-      'middleware',
-      this.middleware,
-      this.afterRouterMiddleware,
-    );
-
-    this.useStatic();
-    this.useRouter();
-    this.useAfterRouterMiddleware();
   }
 
   /**
@@ -116,6 +110,19 @@ class Maius {
     return new Promise(resolve => {
       this.app.listen(port, () => resolve());
     });
+  }
+
+  /**
+   * users config.js file content.
+   */
+
+  public get userConfig() {
+    if (this[USER_CONFIG]) {
+      return this[USER_CONFIG];
+    }
+
+    this[USER_CONFIG] = new UserConfigLoader(this.options).config;
+    return this[USER_CONFIG];
   }
 
   /**
@@ -163,7 +170,7 @@ class Maius {
       return this[MIDDLEWARE_LOADER];
     }
 
-    this[MIDDLEWARE_LOADER] = new MiddlewareLoader(this.options);
+    this[MIDDLEWARE_LOADER] = new MiddlewareLoader(this);
     return this[MIDDLEWARE_LOADER];
   }
 
@@ -194,18 +201,7 @@ class Maius {
 
   private useMiddleware(): void {
     this.middleware.forEach(fn => {
-      this.app.use(fn);
-    });
-  }
-
-  /**
-   * Load user's middleware that the property 'afterRouter' is true.
-   *
-   * @private
-   */
-
-  private useAfterRouterMiddleware(): void {
-    this.afterRouterMiddleware.forEach(fn => {
+      debug('use middleware: %O %O', fn, fn && fn.name);
       this.app.use(fn);
     });
   }
@@ -215,65 +211,13 @@ class Maius {
    * @since 0.1.0
    */
 
-  private useStatic(): void {
-    const publicPath = path.join(this.options.rootDir, 'public');
-
-    try {
-      fs.readdirSync(publicPath);
-    } catch (e) {
-      return;
-    }
-
-    this.app.use(maiusStatic(publicPath, this.userConfig.static));
-  }
-
-  /**
-   * @private
-   * @since 0.1.0
-   */
-
-  private useRouter(): void {
+  private loadUserRoutes(): void {
     require(path.join(this.options.rootDir, 'router.js'))({
       controller: this.controller,
       router: this.router,
     });
-    this.app.use(this.router.routes());
-  }
-
-  /**
-   * the middlewares without afterRouterMiddleware.
-   *
-   * @since 0.1.0
-   */
-
-  get middleware(): Middleware[] {
-    return this.middlewareLoader.getMiddlewera().middleware;
-  }
-
-  /**
-   * the afterRouterMiddlewares
-   *
-   * @since 0.1.0
-   */
-
-  get afterRouterMiddleware(): Middleware[] {
-    return this.middlewareLoader.getMiddlewera().afterRouterMiddleware;
-  }
-
-  /**
-   * user config
-   *
-   * @since 0.1.0
-   */
-
-  get userConfig() {
-    if (this[USER_CONFIG]) {
-      return this[USER_CONFIG];
-    }
-
-    this[USER_CONFIG] = new UserConfigLoader(this.options).config;
-    return this[USER_CONFIG];
   }
 }
 
+export default Maius;
 module.exports = Maius;

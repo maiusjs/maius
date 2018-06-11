@@ -1,1 +1,2 @@
-export declare const isFunction: (fn: any) => boolean;
+export declare const isFunction: (fn: () => void) => boolean;
+export declare const isObject: (obj: any) => boolean;

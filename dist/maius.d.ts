@@ -1,17 +1,11 @@
+import IUserOptions from './interface/i-user-options';
 import Application from './lib/application';
 import BaseContext from './lib/base-context';
-import Router from './lib/router';
-import ControllerLoader from './loader/controller';
-import MiddlewareLoader from './loader/middleware';
-import ServiceLoader from './loader/service';
-interface IOptions {
-    rootDir: string;
-    port?: number;
-}
+import Router from './lib/middleware/router';
 declare class Maius {
     static Controller: typeof BaseContext;
     static Service: typeof BaseContext;
-    options: IOptions;
+    options: IUserOptions;
     app: Application;
     router: Router;
     controller: {
@@ -20,18 +14,15 @@ declare class Maius {
     service: {
         [x: string]: BaseContext;
     };
-    constructor(options: IOptions);
-    readonly controllerLoader: ControllerLoader;
-    readonly serviceLoader: ServiceLoader;
-    readonly middlewareLoader: MiddlewareLoader;
-    setControllerAndServiceProps(): void;
-    useMiddleware(): void;
-    useAfterRouterMiddleware(): void;
-    useStatic(): void;
-    useRouter(): void;
-    readonly middleware: any;
-    readonly afterRouterMiddleware: any;
-    readonly userConfig: object;
+    private middleware;
+    constructor(options: IUserOptions);
     listen(port: any): Promise<void>;
+    readonly userConfig: any;
+    private readonly controllerLoader;
+    private readonly serviceLoader;
+    private readonly middlewareLoader;
+    private setControllerAndServiceProps;
+    private useMiddleware;
+    private loadUserRoutes;
 }
 export default Maius;

@@ -2,55 +2,157 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const assert = require("assert");
 const Debug = require("debug");
+const fs = require("fs");
 const path = require("path");
+const static_1 = require("../lib/middleware/static");
 const debug = Debug('maius:middlewareLoader');
 const MIDDLEWARE = Symbol('middleware');
 class MiddlewareLoader {
-    constructor(options) {
-        this.options = options;
+    constructor(maius) {
+        this.options = maius.options;
         assert(this.options.rootDir);
+        this.userConfig = maius.userConfig;
+        this.maius = maius;
+        this.selfBeforeMdw = [
+            this.selfStaticMiddleware(),
+        ];
+        this.selfAfterMdw = [
+            this.selfRouterMiddleware(),
+        ];
     }
-    getMiddlewera() {
+    getMiddleware() {
         if (this[MIDDLEWARE])
             return this[MIDDLEWARE];
-        this[MIDDLEWARE] = {
-            afterRouterMiddleware: [],
-            middleware: [],
-        };
-        const middlewareDir = path.join(this.options.rootDir, 'middleware');
-        const middlewareConfig = require(path.join(this.options.rootDir, 'config.js')).middleware;
-        if (!middlewareConfig) {
-            debug('%o', 'no custom middleware');
-            return this[MIDDLEWARE];
-        }
-        if (!Array.isArray(middlewareConfig)) {
-            debug('%o', 'no custom middleware');
-            throw new Error('config.middleware must be an array');
-        }
-        middlewareConfig.forEach((item, index) => {
-            if (typeof item === 'string') {
-                const func = require(path.join(middlewareDir, `${item}.js`));
-                assert(typeof func === 'function', 'middleware must be an function');
-                this[MIDDLEWARE].middleware.push(func());
-                return;
-            }
-            assert(item.name && typeof item.name === 'string', `middleware[${index}].name need string type value`);
-            const opt = {
-                afterRouter: item.afterRouter || false,
-                name: item.name,
-                options: item.options,
-            };
-            const fn = require(path.join(middlewareDir, `${opt.name}.js`));
-            assert(typeof fn === 'function', 'middleware must be an function');
-            if (!opt.afterRouter) {
-                this[MIDDLEWARE].middleware.push(fn(opt.options));
-                return;
-            }
-            this[MIDDLEWARE].afterRouterMiddleware.push(fn(opt.options));
+        const middleware = [];
+        const userMdwOpts = this.getMiddlewareConfig();
+        const combinedMdwOpts = [
+            ...this.selfBeforeMdw,
+            ...userMdwOpts,
+            ...this.selfAfterMdw,
+        ];
+        debug('combinedMiddleware: %O', combinedMdwOpts);
+        const reorderedMdwOpts = this.reorderMiddlewareOpts(combinedMdwOpts);
+        debug('reorderedMiddelware: %O', reorderedMdwOpts);
+        reorderedMdwOpts.forEach((opts, index) => {
+            const mdw = this.loadOneMiddleware(opts);
+            middleware.push(mdw);
         });
+        this[MIDDLEWARE] = middleware;
         return this[MIDDLEWARE];
+    }
+    getMiddlewareConfig() {
+        const middleware = this.userConfig.middleware;
+        assert(Array.isArray(middleware), '[config] middleware property must be an array type.');
+        return this.userConfig.middleware.map((opts, index) => {
+            const cfg = {
+                _couldReorder: null,
+                _filename: null,
+                args: [],
+                name: null,
+            };
+            if ('string' === typeof opts) {
+                cfg.name = opts;
+            }
+            else {
+                assert(typeof opts.name === 'string', `[config] middleware[${index}].name need string type value`);
+                cfg.name = opts.name;
+                cfg.args = opts.args;
+            }
+            cfg._filename = path.join(this.getMiddlewareDir(), `${cfg.name}.js`);
+            return cfg;
+        });
+    }
+    getMiddlewareDir() {
+        return path.join(this.options.rootDir, 'middleware');
+    }
+    loadOneMiddleware(opts) {
+        debug('Load one middleware: %o', opts);
+        let fn = null;
+        if ('function' === typeof opts.load) {
+            fn = opts.load(this.maius.app);
+        }
+        else {
+            const func = fs.statSync(opts._filename) ?
+                require(opts._filename) :
+                require(opts.name);
+            assert(typeof func === 'function', `middleware ${opts.name} must be an function, but it is ${func}`);
+            fn = func.apply(func, opts.args);
+        }
+        return fn;
+    }
+    reorderMiddlewareOpts(arr) {
+        const reorderedNames = new Set();
+        const removed = [];
+        arr.forEach(opts => {
+            if (opts._couldReorder)
+                return;
+            if (this.isSelfMiddleware(opts)) {
+                reorderedNames.add(opts.name);
+            }
+        });
+        const filted = arr.filter(opt => {
+            if (opt._couldReorder && reorderedNames.has(opt.name)) {
+                removed.push(opt);
+                return false;
+            }
+            return true;
+        });
+        return filted.map(opt => {
+            if (!this.isSelfMiddleware(opt))
+                return opt;
+            const removedMdw = this.findSelfMiddlewareOpt(removed, opt.name, true);
+            if (!removedMdw) {
+                return opt;
+            }
+            return this.assignOpt(removedMdw, opt);
+        });
+    }
+    findSelfMiddlewareOpt(arr, name, reorder) {
+        let cfg = null;
+        arr.forEach(opt => {
+            if (name === opt.name && !!reorder === opt._couldReorder) {
+                cfg = opt;
+            }
+        });
+        return cfg;
+    }
+    assignOpt(opt1, opt2) {
+        const cfg = {
+            _couldReorder: null,
+            _filename: null,
+            args: null,
+            load: null,
+            name: null,
+        };
+        return Object.assign(cfg, opt1, opt2);
+    }
+    isSelfMiddleware(opts) {
+        return /^maius:/.test(opts.name);
+    }
+    selfStaticMiddleware() {
+        const publicPath = path.join(this.options.rootDir, 'public');
+        try {
+            fs.readdirSync(publicPath);
+        }
+        catch (e) {
+            return;
+        }
+        return {
+            _couldReorder: true,
+            load: () => {
+                return static_1.default(publicPath, this.userConfig.static);
+            },
+            name: 'maius:static',
+        };
+    }
+    selfRouterMiddleware() {
+        return {
+            _couldReorder: true,
+            load: () => {
+                return this.maius.router.routes();
+            },
+            name: 'maius:router',
+        };
     }
 }
 exports.default = MiddlewareLoader;
-
-//# sourceMappingURL=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uL3NyYy9sb2FkZXIvbWlkZGxld2FyZS50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOztBQUFBLGlDQUFpQztBQUNqQywrQkFBK0I7QUFDL0IsNkJBQTZCO0FBRTdCLE1BQU0sS0FBSyxHQUFHLEtBQUssQ0FBQyx3QkFBd0IsQ0FBQyxDQUFDO0FBRTlDLE1BQU0sVUFBVSxHQUFHLE1BQU0sQ0FBQyxZQUFZLENBQUMsQ0FBQztBQUV4QztJQUdFLFlBQVksT0FBTztRQUNqQixJQUFJLENBQUMsT0FBTyxHQUFHLE9BQU8sQ0FBQztRQUN2QixNQUFNLENBQUMsSUFBSSxDQUFDLE9BQU8sQ0FBQyxPQUFPLENBQUMsQ0FBQztJQUMvQixDQUFDO0lBY00sYUFBYTtRQUNsQixJQUFJLElBQUksQ0FBQyxVQUFVLENBQUM7WUFBRSxPQUFPLElBQUksQ0FBQyxVQUFVLENBQUMsQ0FBQztRQUs5QyxJQUFJLENBQUMsVUFBVSxDQUFDLEdBQUc7WUFDakIscUJBQXFCLEVBQUUsRUFBRTtZQUN6QixVQUFVLEVBQUUsRUFBRTtTQUNmLENBQUM7UUFFRixNQUFNLGFBQWEsR0FBRyxJQUFJLENBQUMsSUFBSSxDQUFDLElBQUksQ0FBQyxPQUFPLENBQUMsT0FBTyxFQUFFLFlBQVksQ0FBQyxDQUFDO1FBQ3BFLE1BQU0sZ0JBQWdCLEdBQUcsT0FBTyxDQUFDLElBQUksQ0FBQyxJQUFJLENBQUMsSUFBSSxDQUFDLE9BQU8sQ0FBQyxPQUFPLEVBQUUsV0FBVyxDQUFDLENBQUMsQ0FBQyxVQUFVLENBQUM7UUFFMUYsSUFBSSxDQUFDLGdCQUFnQixFQUFFO1lBQ3JCLEtBQUssQ0FBQyxJQUFJLEVBQUUsc0JBQXNCLENBQUMsQ0FBQztZQUNwQyxPQUFPLElBQUksQ0FBQyxVQUFVLENBQUMsQ0FBQztTQUN6QjtRQUdELElBQUksQ0FBQyxLQUFLLENBQUMsT0FBTyxDQUFDLGdCQUFnQixDQUFDLEVBQUU7WUFDcEMsS0FBSyxDQUFDLElBQUksRUFBRSxzQkFBc0IsQ0FBQyxDQUFDO1lBQ3BDLE1BQU0sSUFBSSxLQUFLLENBQUMsb0NBQW9DLENBQUMsQ0FBQztTQUN2RDtRQUdELGdCQUFnQixDQUFDLE9BQU8sQ0FBQyxDQUFDLElBQUksRUFBRSxLQUFLLEVBQUUsRUFBRTtZQUV2QyxJQUFJLE9BQU8sSUFBSSxLQUFLLFFBQVEsRUFBRTtnQkFDNUIsTUFBTSxJQUFJLEdBQUcsT0FBTyxDQUFDLElBQUksQ0FBQyxJQUFJLENBQUMsYUFBYSxFQUFFLEdBQUcsSUFBSSxLQUFLLENBQUMsQ0FBQyxDQUFDO2dCQUM3RCxNQUFNLENBQUMsT0FBTyxJQUFJLEtBQUssVUFBVSxFQUFFLGdDQUFnQyxDQUFDLENBQUM7Z0JBRXJFLElBQUksQ0FBQyxVQUFVLENBQUMsQ0FBQyxVQUFVLENBQUMsSUFBSSxDQUFDLElBQUksRUFBRSxDQUFDLENBQUM7Z0JBQ3pDLE9BQU87YUFDUjtZQUdELE1BQU0sQ0FDSixJQUFJLENBQUMsSUFBSSxJQUFJLE9BQU8sSUFBSSxDQUFDLElBQUksS0FBSyxRQUFRLEVBQzFDLGNBQWMsS0FBSywrQkFBK0IsQ0FDbkQsQ0FBQztZQUVGLE1BQU0sR0FBRyxHQUFHO2dCQUNWLFdBQVcsRUFBRSxJQUFJLENBQUMsV0FBVyxJQUFJLEtBQUs7Z0JBQ3RDLElBQUksRUFBRSxJQUFJLENBQUMsSUFBSTtnQkFDZixPQUFPLEVBQUUsSUFBSSxDQUFDLE9BQU87YUFDdEIsQ0FBQztZQUVGLE1BQU0sRUFBRSxHQUFHLE9BQU8sQ0FBQyxJQUFJLENBQUMsSUFBSSxDQUFDLGFBQWEsRUFBRSxHQUFHLEdBQUcsQ0FBQyxJQUFJLEtBQUssQ0FBQyxDQUFDLENBQUM7WUFDL0QsTUFBTSxDQUFDLE9BQU8sRUFBRSxLQUFLLFVBQVUsRUFBRSxnQ0FBZ0MsQ0FBQyxDQUFDO1lBRW5FLElBQUksQ0FBQyxHQUFHLENBQUMsV0FBVyxFQUFFO2dCQUNwQixJQUFJLENBQUMsVUFBVSxDQUFDLENBQUMsVUFBVSxDQUFDLElBQUksQ0FBQyxFQUFFLENBQUMsR0FBRyxDQUFDLE9BQU8sQ0FBQyxDQUFDLENBQUM7Z0JBQ2xELE9BQU87YUFDUjtZQUVELElBQUksQ0FBQyxVQUFVLENBQUMsQ0FBQyxxQkFBcUIsQ0FBQyxJQUFJLENBQUMsRUFBRSxDQUFDLEdBQUcsQ0FBQyxPQUFPLENBQUMsQ0FBQyxDQUFDO1FBQy9ELENBQUMsQ0FBQyxDQUFDO1FBRUgsT0FBTyxJQUFJLENBQUMsVUFBVSxDQUFDLENBQUM7SUFDMUIsQ0FBQztDQUNGO0FBakZELG1DQWlGQyIsImZpbGUiOiJsb2FkZXIvbWlkZGxld2FyZS5qcyIsInNvdXJjZXNDb250ZW50IjpbImltcG9ydCAqIGFzIGFzc2VydCBmcm9tICdhc3NlcnQnO1xuaW1wb3J0ICogYXMgRGVidWcgZnJvbSAnZGVidWcnO1xuaW1wb3J0ICogYXMgcGF0aCBmcm9tICdwYXRoJztcblxuY29uc3QgZGVidWcgPSBEZWJ1ZygnbWFpdXM6bWlkZGxld2FyZUxvYWRlcicpO1xuXG5jb25zdCBNSURETEVXQVJFID0gU3ltYm9sKCdtaWRkbGV3YXJlJyk7XG5cbmV4cG9ydCBkZWZhdWx0IGNsYXNzIE1pZGRsZXdhcmVMb2FkZXIge1xuICBwdWJsaWMgb3B0aW9uczogYW55O1xuXG4gIGNvbnN0cnVjdG9yKG9wdGlvbnMpIHtcbiAgICB0aGlzLm9wdGlvbnMgPSBvcHRpb25zO1xuICAgIGFzc2VydCh0aGlzLm9wdGlvbnMucm9vdERpcik7XG4gIH1cblxuICAvKipcbiAgICogTG9hZCB0aGUgdXNlcidzIG1pZGRsZXdhcmUgYWNjb3JkaW5nIHRvIGNvbmZpZy5qc1xuICAgKlxuICAgKiBAcmV0dXJucyB7T2JqZWN0fVxuICAgKiAge1xuICAgKiAgICBtaWRkbGV3YXJlLFxuICAgKiAgICBhZnRlclJvdXRlck1pZGRsZXdhcmUsXG4gICAqICB9XG4gICAqXG4gICAqIEBzaW5jZSAwLjEuMFxuICAgKi9cblxuICBwdWJsaWMgZ2V0TWlkZGxld2VyYSgpOiBvYmplY3Qge1xuICAgIGlmICh0aGlzW01JRERMRVdBUkVdKSByZXR1cm4gdGhpc1tNSURETEVXQVJFXTtcblxuICAgIC8vIOWwhuS4remXtOS7tuWIhuaIkOS4pOenjeexu+Wei++8jOagueaNriBtaWRkbGV3YXJlLmNvbmZpZ1tuXS5hZnRlclJvdXRlciDlrZfmrrXmnaXljLrliIZcbiAgICAvLyBhZnRlclJvdXRlck1pZGRsZXdhcmU6IOi/meS4gOexu+eahOS4remXtOS7tuWwhuS8muWcqCByb3V0ZXLkuYvlkI7miafooYxcbiAgICAvLyBtaWRkbGV3YXJlOiDov5nkuIDnsbvnmoTkuK3pl7Tku7blsIbkvJrlnKggcm91dGVyIOS5i+WJjeaJp+ihjFxuICAgIHRoaXNbTUlERExFV0FSRV0gPSB7XG4gICAgICBhZnRlclJvdXRlck1pZGRsZXdhcmU6IFtdLFxuICAgICAgbWlkZGxld2FyZTogW10sXG4gICAgfTtcblxuICAgIGNvbnN0IG1pZGRsZXdhcmVEaXIgPSBwYXRoLmpvaW4odGhpcy5vcHRpb25zLnJvb3REaXIsICdtaWRkbGV3YXJlJyk7XG4gICAgY29uc3QgbWlkZGxld2FyZUNvbmZpZyA9IHJlcXVpcmUocGF0aC5qb2luKHRoaXMub3B0aW9ucy5yb290RGlyLCAnY29uZmlnLmpzJykpLm1pZGRsZXdhcmU7XG5cbiAgICBpZiAoIW1pZGRsZXdhcmVDb25maWcpIHtcbiAgICAgIGRlYnVnKCclbycsICdubyBjdXN0b20gbWlkZGxld2FyZScpO1xuICAgICAgcmV0dXJuIHRoaXNbTUlERExFV0FSRV07XG4gICAgfVxuXG4gICAgLy8gbWlkZGxld2FyZUNvbmZpZyDlv4XpobvopoHmsYLmmK/mlbDnu4RcbiAgICBpZiAoIUFycmF5LmlzQXJyYXkobWlkZGxld2FyZUNvbmZpZykpIHtcbiAgICAgIGRlYnVnKCclbycsICdubyBjdXN0b20gbWlkZGxld2FyZScpO1xuICAgICAgdGhyb3cgbmV3IEVycm9yKCdjb25maWcubWlkZGxld2FyZSBtdXN0IGJlIGFuIGFycmF5Jyk7XG4gICAgfVxuXG4gICAgLy8gY29uZmlnLm1pZGRsZXdhcmUg5pWw57uE5q+P5LiA6aG55LiL5Y+v5Lul5o6l5Y+X5Lik56eN57G75Z6L55qE5YC877yac3RyaW5nLCBvYmplY3RcbiAgICBtaWRkbGV3YXJlQ29uZmlnLmZvckVhY2goKGl0ZW0sIGluZGV4KSA9PiB7XG4gICAgICAvLyDnrKzkuIDnp43mg4XlhrXvvJpzdHJpbmdcbiAgICAgIGlmICh0eXBlb2YgaXRlbSA9PT0gJ3N0cmluZycpIHtcbiAgICAgICAgY29uc3QgZnVuYyA9IHJlcXVpcmUocGF0aC5qb2luKG1pZGRsZXdhcmVEaXIsIGAke2l0ZW19LmpzYCkpO1xuICAgICAgICBhc3NlcnQodHlwZW9mIGZ1bmMgPT09ICdmdW5jdGlvbicsICdtaWRkbGV3YXJlIG11c3QgYmUgYW4gZnVuY3Rpb24nKTtcblxuICAgICAgICB0aGlzW01JRERMRVdBUkVdLm1pZGRsZXdhcmUucHVzaChmdW5jKCkpO1xuICAgICAgICByZXR1cm47XG4gICAgICB9XG5cbiAgICAgIC8vIOesrOS6jOenje+8mk9iamVjdCB7IG5hbWUsIG9wdGlvbnMsIGFmdGVyUm91dGVyIH1cbiAgICAgIGFzc2VydChcbiAgICAgICAgaXRlbS5uYW1lICYmIHR5cGVvZiBpdGVtLm5hbWUgPT09ICdzdHJpbmcnLFxuICAgICAgICBgbWlkZGxld2FyZVske2luZGV4fV0ubmFtZSBuZWVkIHN0cmluZyB0eXBlIHZhbHVlYCxcbiAgICAgICk7XG5cbiAgICAgIGNvbnN0IG9wdCA9IHtcbiAgICAgICAgYWZ0ZXJSb3V0ZXI6IGl0ZW0uYWZ0ZXJSb3V0ZXIgfHwgZmFsc2UsXG4gICAgICAgIG5hbWU6IGl0ZW0ubmFtZSxcbiAgICAgICAgb3B0aW9uczogaXRlbS5vcHRpb25zLFxuICAgICAgfTtcblxuICAgICAgY29uc3QgZm4gPSByZXF1aXJlKHBhdGguam9pbihtaWRkbGV3YXJlRGlyLCBgJHtvcHQubmFtZX0uanNgKSk7XG4gICAgICBhc3NlcnQodHlwZW9mIGZuID09PSAnZnVuY3Rpb24nLCAnbWlkZGxld2FyZSBtdXN0IGJlIGFuIGZ1bmN0aW9uJyk7XG5cbiAgICAgIGlmICghb3B0LmFmdGVyUm91dGVyKSB7XG4gICAgICAgIHRoaXNbTUlERExFV0FSRV0ubWlkZGxld2FyZS5wdXNoKGZuKG9wdC5vcHRpb25zKSk7XG4gICAgICAgIHJldHVybjtcbiAgICAgIH1cblxuICAgICAgdGhpc1tNSURETEVXQVJFXS5hZnRlclJvdXRlck1pZGRsZXdhcmUucHVzaChmbihvcHQub3B0aW9ucykpO1xuICAgIH0pO1xuXG4gICAgcmV0dXJuIHRoaXNbTUlERExFV0FSRV07XG4gIH1cbn1cbiJdfQ==

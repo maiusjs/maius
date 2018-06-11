@@ -3,112 +3,318 @@ import * as Debug from 'debug';
 import * as fs from 'fs';
 import { Middleware } from 'koa';
 import * as path from 'path';
-import IUserConfig from '../interface/i-user-config';
+import IUserConfig, { IUserConfigMiddlewareArrItem } from '../interface/i-user-config';
 import IUserOptions from '../interface/i-user-options';
+import Router from '../lib/middleware/router';
+import maiusStatic from '../lib/middleware/static';
+import Maius from '../maius';
 
 const debug = Debug('maius:middlewareLoader');
 const MIDDLEWARE = Symbol('middleware');
 
-interface ICfg {
-  afterRouter: boolean;
-  args: any[];
-  name: string;
-}
+/**
+ * It not only load users middleware, but also load maius' internal middleware.
+ */
 
 export default class MiddlewareLoader {
-  public options: IUserOptions;
+  private maius: Maius;
+  private options: IUserOptions;
+  private userConfig: IUserConfig;
+  private router: Router;
+  private selfBeforeMdw: IUserConfigMiddlewareArrItem[];
+  private selfAfterMdw: IUserConfigMiddlewareArrItem[];
 
-  constructor(options) {
-    this.options = options;
+  /**
+   * @constructor
+   * @param options users options
+   * @param userConfig users config.js
+   */
+
+  constructor(maius: Maius) {
+    /**
+     * @private
+     */
+    this.options = maius.options;
     assert(this.options.rootDir);
+
+    /**
+     * @private
+     */
+    this.userConfig = maius.userConfig;
+
+    /**
+     * @private
+     */
+    this.maius = maius;
+
+    /**
+     * this.selfBeforeMdw: It will be loaded before users middleware.
+     * this.selfAfterMdw: It will be loaded after users middleware.
+     *
+     * User could reorder those middlware, by setting 'maius:xx' in config.js.
+     *
+     * @private
+     */
+    this.selfBeforeMdw = [
+      this.selfStaticMiddleware(),
+    ];
+
+    /**
+     * Same as above.
+     *
+     * @private
+     */
+    this.selfAfterMdw = [
+      this.selfRouterMiddleware(),
+    ];
   }
 
   /**
-   * Load the user's middleware according to config.js
+   * Get all middlewares, includes users and miaus'.
    *
-   * @returns {Object}
-   *  {
-   *    middleware,
-   *    afterRouterMiddleware,
-   *  }
+   * @returns
    *
    * @since 0.1.0
    */
 
-  public getMiddlewera():
-  { middleware: Middleware[], afterRouterMiddleware: Middleware[] } {
+  public getMiddleware(): Middleware[] {
     if (this[MIDDLEWARE]) return this[MIDDLEWARE];
 
-    // 将中间件分成两种类型，根据 middleware.config[n].afterRouter 字段来区分
-    // afterRouterMiddleware: 这一类的中间件将会在 router之后执行
-    // middleware: 这一类的中间件将会在 router 之前执行
-
     const middleware: Middleware[] = [];
-    const afterRouterMiddleware: Middleware[] = [];
+    const userMdwOpts: IUserConfigMiddlewareArrItem[] = this.getMiddlewareConfig();
 
-    const config: IUserConfig = require(path.join(this.options.rootDir, 'config.js'));
-    const middlewareDir = path.join(this.options.rootDir, 'middleware');
-    const middlewareConfig = config.middleware;
+    /**
+     * Combine users middleware and maius' internal middlware.
+     */
+    const combinedMdwOpts: IUserConfigMiddlewareArrItem[] = [
+      ...this.selfBeforeMdw,
+      ...userMdwOpts,
+      ...this.selfAfterMdw,
+    ];
 
-    if (!middlewareConfig) {
-      debug('%o', 'no custom middleware');
-      return this[MIDDLEWARE];
-    }
+    debug('combinedMiddleware: %O', combinedMdwOpts);
 
-    // middlewareConfig 必须要求是数组
-    if (!Array.isArray(middlewareConfig)) {
-      debug('%o', 'no custom middleware');
-      throw new Error('config.middleware must be an array');
-    }
+    const reorderedMdwOpts = this.reorderMiddlewareOpts(combinedMdwOpts);
 
-    // config.middleware 数组每一项下可以接受两种类型的值：string, object
-    middlewareConfig.forEach((item, index) => {
-      const cfg: ICfg = {
-        afterRouter: null,
-        args: null,
+    debug('reorderedMiddelware: %O', reorderedMdwOpts);
+
+    reorderedMdwOpts.forEach((opts, index) => {
+      const mdw: Middleware = this.loadOneMiddleware(opts);
+      middleware.push(mdw);
+    });
+
+    this[MIDDLEWARE] = middleware;
+    return this[MIDDLEWARE];
+  }
+
+  /**
+   * Get the middleware proporty in users config.js
+   *
+   * @returns users middleware config
+   *
+   * @since 0.1.0
+   */
+
+  public getMiddlewareConfig(): IUserConfigMiddlewareArrItem[] {
+    const middleware = this.userConfig.middleware;
+    assert(Array.isArray(middleware), '[config] middleware property must be an array type.');
+
+    return this.userConfig.middleware.map((opts, index) => {
+      const cfg: IUserConfigMiddlewareArrItem = {
+        _couldReorder: null,
+        _filename: null,
+        args: [],
         name: null,
       };
 
-      if (typeof item === 'string') {
-        cfg.name = item;
+      if ('string' === typeof opts) {
+        cfg.name = opts;
       } else {
-        cfg.name = item.name;
+        assert(
+          typeof opts.name === 'string',
+          `[config] middleware[${index}].name need string type value`,
+        );
+        cfg.name = opts.name;
+        cfg.args = opts.args;
       }
 
-      cfg.afterRouter = cfg.afterRouter || false;
-      cfg.args = cfg.args || [];
+      cfg._filename = path.join(this.getMiddlewareDir(), `${cfg.name}.js`);
 
-      if (typeof item !== 'string' && item.options) {
-        cfg.args.push(item.options);
-      }
+      return cfg;
+    });
+  }
 
+  /**
+   * Get the users middlware directory path.
+   *
+   * @returns users middleware directory path.
+   *
+   * @since 0.1.0
+   */
+
+  public getMiddlewareDir(): string {
+    return path.join(this.options.rootDir, 'middleware');
+  }
+
+  /**
+   * To load one middleware.
+   *
+   * @param opts
+   * @returns The middleware function.
+   */
+
+  private loadOneMiddleware(opts: IUserConfigMiddlewareArrItem): Middleware {
+    debug('Load one middleware: %o', opts);
+
+    let fn: Middleware = null;
+
+    if ('function' === typeof opts.load) {
+      fn = opts.load(this.maius.app);
+    } else {
+      const func = fs.statSync(opts._filename) ?
+        require(opts._filename) :
+        require(opts.name);
       assert(
-        cfg.name && typeof cfg.name === 'string',
-        `middleware[${index}].name need string type value`,
+        typeof func === 'function',
+        `middleware ${opts.name} must be an function, but it is ${func}`,
       );
+      fn = func.apply(func, opts.args);
+    }
 
-      const filename = path.join(middlewareDir, `${cfg.name}.js`);
-      const func: () => Middleware = fs.existsSync(filename) ?
-        require(filename) :
-        require(cfg.name);
+    return fn;
+  }
 
-      assert(typeof func === 'function', 'middleware must be an function');
+  /**
+   * It could be reordered the middleware include users and maius's,
+   * if user setting it.
+   *
+   * @param arr
+   * @returns Filtered middlewareOpts.
+   */
 
-      const fn: Middleware = func().apply(this, cfg.args);
+  private reorderMiddlewareOpts(arr: IUserConfigMiddlewareArrItem[]): typeof arr {
+    const reorderedNames = new Set<string>();
+    const removed = [];
 
-      if (!cfg.afterRouter) {
-        middleware.push(fn);
-        return;
+    // find the names of that be reordered internal middleware.
+    arr.forEach(opts => {
+      if (opts._couldReorder) return;
+
+      if (this.isSelfMiddleware(opts)) {
+        reorderedNames.add(opts.name);
       }
-
-      afterRouterMiddleware.push(fn);
     });
 
-    this[MIDDLEWARE] = {
-      afterRouterMiddleware,
-      middleware,
+    // filter the internal middleware that be ordered.
+    const filted = arr.filter(opt => {
+      // _couldReorder is true means that the middleware is an internal middleware and
+      // it could be reorder.
+      if (opt._couldReorder && reorderedNames.has(opt.name)) {
+        removed.push(opt);
+        return false;
+      }
+      return true;
+    });
+
+    return filted.map(opt => {
+      if (!this.isSelfMiddleware(opt)) return opt;
+
+      // find the middleware that be removed away.
+      const removedMdw = this.findSelfMiddlewareOpt(removed, opt.name, true);
+      if (!removedMdw) {
+        return opt;
+      }
+
+      // assign user opt and internal opt.
+      return this.assignOpt(removedMdw, opt);
+    });
+  }
+
+  /**
+   * find the middleware by the conditions.
+   *
+   * @param arr source array.
+   * @param name the name of middleware.
+   * @param reorder the value of opt._couldReorder.
+   * @returns
+   */
+
+  private findSelfMiddlewareOpt(
+    arr: IUserConfigMiddlewareArrItem[],
+    name: string,
+    reorder: boolean,
+  ): IUserConfigMiddlewareArrItem {
+    let cfg: IUserConfigMiddlewareArrItem = null;
+
+    arr.forEach(opt => {
+      if (name === opt.name && !!reorder === opt._couldReorder) {
+        cfg = opt;
+      }
+    });
+
+    return cfg;
+  }
+
+  private assignOpt(opt1: IUserConfigMiddlewareArrItem, opt2: typeof opt1) {
+    const cfg: IUserConfigMiddlewareArrItem = {
+      _couldReorder: null,
+      _filename: null,
+      args: null,
+      load: null,
+      name: null,
     };
 
-    return this[MIDDLEWARE];
+    return Object.assign(cfg, opt1, opt2);
+  }
+
+  /**
+   * Is it maius' middlware? whatever it from users or maius.
+   *
+   * @param opts
+   * @returns
+   */
+
+  private isSelfMiddleware(opts: IUserConfigMiddlewareArrItem): boolean {
+    return /^maius:/.test(opts.name);
+  }
+
+  /**
+   * Generate maius-static middleware options.
+   *
+   * @returns maius-static middleware options.
+   */
+
+  private selfStaticMiddleware(): IUserConfigMiddlewareArrItem {
+    const publicPath = path.join(this.options.rootDir, 'public');
+
+    try {
+      fs.readdirSync(publicPath);
+    } catch (e) {
+      return;
+    }
+
+    return {
+      _couldReorder: true,
+      load: () => {
+        return maiusStatic(publicPath, this.userConfig.static);
+      },
+      name: 'maius:static',
+    };
+  }
+
+  /**
+   * Generate maius-router middleware config
+   *
+   * @returns
+   */
+
+  private selfRouterMiddleware(): IUserConfigMiddlewareArrItem {
+    return {
+      _couldReorder: true,
+      load: () => {
+        return this.maius.router.routes();
+      },
+      name: 'maius:router',
+    };
   }
 }

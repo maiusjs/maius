@@ -2,10 +2,10 @@ module.exports = {
   middleware: [
     'outer',
     'timing',
+    'maius:router', // reordered middleware.
     {
       name: 'after',
-      options: { name: 'nihao' },
-      afterRouter: true,
+      args: [{name: 'hihao'}],
     },
   ],
   static: { },

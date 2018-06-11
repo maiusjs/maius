@@ -3,5 +3,6 @@
 /// <reference types="koa" />
 /// <reference types="koa-router" />
 /// <reference types="koa-views" />
-declare const maiusStatic: (staticPath: any, opts: any) => (context: Application.Context, next: () => Promise<any>) => any;
+import * as serve from 'koa-static';
+declare const maiusStatic: (staticPath: string, opts: serve.Options) => (context: Application.Context, next: () => Promise<any>) => any;
 export default maiusStatic;

@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import * as path from 'path';
 import IUserConfig from '../interface/i-user-config';
 import IUserOptions from '../interface/i-user-options';
@@ -22,7 +23,13 @@ export default class UserConfigLoader {
   get config(): IUserConfig {
     if (this[CONTENT]) { return this[CONTENT]; }
 
-    this[CONTENT] = require(path.join(this.options.rootDir, 'config.js'));
+    const filename = path.join(this.options.rootDir, 'config.js');
+
+    if (!fs.statSync(filename)) {
+      throw new Error('Not found config.js in project root directory!');
+    }
+
+    this[CONTENT] = require(filename);
     return this[CONTENT];
   }
 }

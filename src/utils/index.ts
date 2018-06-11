@@ -3,7 +3,7 @@ export const isFunction = (fn: () => void): boolean => {
   return str === '[object Function]';
 };
 
-export const isObject = (fn: () => void): boolean => {
-  const str = Object.prototype.toString.call(fn);
+export const isObject = (obj: any): boolean => {
+  const str = Object.prototype.toString.call(obj);
   return str === '[object Object]';
 };

@@ -10,5 +10,6 @@ module.exports = class HomeController extends Controller {
     // console.log('Controller dealing with the request');
     const number = await this.service.home.number(10);
     ctx.body = number;
+    await next();
   }
 };

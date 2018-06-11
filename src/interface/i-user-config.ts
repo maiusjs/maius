@@ -1,22 +1,28 @@
+import Application from '../lib/application';
+
+/**
+ * Users config.js
+ */
+
 export default interface IUserConfig {
-  middleware?: (string | {
-    name: string,
-    args?: any[],
-    options?: any,
-    afterRouter?: boolean,
-  })[];
+  middleware?: IUserConfigMiddlewareOpts[];
   static: any;
 }
 
-// module.exports = {
-//   middleware: [
-//     'outer',
-//     'timing',
-//     {
-//       name: 'after',
-//       options: { name: 'nihao' },
-//       afterRouter: true,
-//     },
-//   ],
-//   static: { },
-// };
+/**
+ * (alias) the item of config.middleware
+ */
+
+export type IUserConfigMiddlewareOpts = string | IUserConfigMiddlewareArrItem;
+
+/**
+ * config.middleware
+ */
+
+export interface IUserConfigMiddlewareArrItem {
+  args?: any[];
+  name: string;
+  load?: (app: Application) => any;
+  _couldReorder?: boolean;
+  _filename?: string;
+}

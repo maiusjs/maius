@@ -1,6 +1,6 @@
 import * as KoaRouter from 'koa-router';
 
-export default class Router extends KoaRouter {
+class Router extends KoaRouter {
   private maius: any;
 
   /**
@@ -19,3 +19,5 @@ export default class Router extends KoaRouter {
   // tslint:disable-next-line:no-empty
   public resources(...args) { }
 }
+
+export default Router;
