@@ -111,11 +111,9 @@ export default class MiddlewareLoader {
    * Get the middleware proporty in users config.js
    *
    * @returns users middleware config
-   *
-   * @since 0.1.0
    */
 
-  public getMiddlewareConfig(): IUserConfigMiddlewareArrItem[] {
+  private getMiddlewareConfig(): IUserConfigMiddlewareArrItem[] {
     const middleware = this.userConfig.middleware || [];
     assert(Array.isArray(middleware), '[config] middleware property must be an array type.');
 
@@ -148,11 +146,9 @@ export default class MiddlewareLoader {
    * Get the users middlware directory path.
    *
    * @returns users middleware directory path.
-   *
-   * @since 0.1.0
    */
 
-  public getMiddlewareDir(): string {
+  private getMiddlewareDir(): string {
     return path.join(this.options.rootDir, 'middleware');
   }
 
