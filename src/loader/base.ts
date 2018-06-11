@@ -2,9 +2,9 @@ import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
 import { isFunction } from 'util';
+import BaseContext from '../lib/base-context';
 import FileItemModel from '../models/loader/file-item-model';
 import { isObject } from '../utils/index';
-import BaseContext from '../lib/base-context';
 
 export default abstract class BaseLoader {
   public path: string;
@@ -58,7 +58,8 @@ export default abstract class BaseLoader {
     try {
       list = fs.readdirSync(dir);
     } catch (error) {
-      throw new Error(`Cannot find ${dir} directory.`);
+      list = [];
+      // throw new Error(`Cannot find ${dir} directory.`);
     }
 
     // filter *.js
