@@ -116,10 +116,10 @@ export default class MiddlewareLoader {
    */
 
   public getMiddlewareConfig(): IUserConfigMiddlewareArrItem[] {
-    const middleware = this.userConfig.middleware;
+    const middleware = this.userConfig.middleware || [];
     assert(Array.isArray(middleware), '[config] middleware property must be an array type.');
 
-    return this.userConfig.middleware.map((opts, index) => {
+    return middleware.map((opts, index) => {
       const cfg: IUserConfigMiddlewareArrItem = {
         _couldReorder: null,
         _filename: null,
