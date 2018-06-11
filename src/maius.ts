@@ -101,7 +101,7 @@ class Maius {
    * @since 0.1.0
    */
 
-  public listen(port): Promise<void> {
+  public listen(port = this.options.port): Promise<void> {
     assert(
       typeof port === 'number',
       'Maius.prototype.listen(port), port must be a number',
