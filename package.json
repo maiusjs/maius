@@ -66,7 +66,6 @@
     "tslint-config-airbnb": "^5.9.2",
     "typescript": "^2.9.1"
   },
-
   "jest": {
     "transform": {
       "^.+\\.tsx?$": "ts-jest"
@@ -81,5 +80,4 @@
       "node"
     ]
   }
-
 }

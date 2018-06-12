@@ -58,6 +58,7 @@ export default class MiddlewareLoader {
      */
     this.selfBeforeMdw = [
       this.makeOneSelfMiddlewareOpts('maius:static'),
+      this.makeOneSelfMiddlewareOpts('maius:views'),
     ];
 
     /**
