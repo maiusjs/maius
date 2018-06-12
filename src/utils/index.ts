@@ -1,9 +1,10 @@
-export const isFunction = (fn: () => void): boolean => {
-  const str = Object.prototype.toString.call(fn);
-  return str === '[object Function]';
+
+const isSomething = (type): (arg: any) => boolean => {
+
+  return arg => {
+    return {}.toString.call(arg) === `[object ${type}]`;
+  };
 };
 
-export const isObject = (obj: any): boolean => {
-  const str = Object.prototype.toString.call(obj);
-  return str === '[object Object]';
-};
+export const isFunction = isSomething('Function');
+export const isObject = isSomething('Object');
