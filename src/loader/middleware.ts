@@ -5,9 +5,10 @@ import { Middleware } from 'koa';
 import * as path from 'path';
 import IUserConfig, { IUserConfigMiddlewareArrItem } from '../interface/i-user-config';
 import IUserOptions from '../interface/i-user-options';
-import Router from '../lib/middleware/router';
+import { maiusViews } from '../lib/middleware/maius-views';
 import maiusStatic from '../lib/middleware/static';
 import Maius from '../maius';
+import { isObject } from '../utils/index';
 
 const debug = Debug('maius:middlewareLoader');
 const MIDDLEWARE = Symbol('middleware');
@@ -20,7 +21,6 @@ export default class MiddlewareLoader {
   private maius: Maius;
   private options: IUserOptions;
   private userConfig: IUserConfig;
-  private router: Router;
   private selfBeforeMdw: IUserConfigMiddlewareArrItem[];
   private selfAfterMdw: IUserConfigMiddlewareArrItem[];
 
@@ -57,6 +57,7 @@ export default class MiddlewareLoader {
      */
     this.selfBeforeMdw = [
       this.selfStaticMiddleware(),
+      this.viewMiddleware(),
     ];
 
     /**
@@ -311,6 +312,65 @@ export default class MiddlewareLoader {
         return this.maius.router.routes();
       },
       name: 'maius:router',
+    };
+  }
+
+  /**
+   * Get view middlewares, includes users and maius
+   *
+   * @returns
+   *
+   * @since 0.1.0
+   */
+  private viewMiddleware(): IUserConfigMiddlewareArrItem {
+
+    const carryList: Map<string, any> = new Map();
+    const DEF_ENGINE = 'ejs';
+    carryList.set('ejs', {
+      engine: 'ejs',
+      extension: 'ejs',
+      viewsDir: 'views',
+    });
+    carryList.set('nunjucks', {
+      engine: 'nunjucks',
+      extension: 'html',
+      viewsDir: 'views',
+    });
+    return {
+      _couldReorder: false,
+      load: () => {
+        const options = this.maius.options;
+        const userConfig = this.maius.userConfig;
+        let viewDir = null;
+        if (isObject(userConfig.viewEngine)) {
+          viewDir = userConfig.viewEngine.viewsDir;
+        }
+        if (viewDir == null) {
+          global.console.warn('you do not have a configuration view folder,\
+            which uses the views folder by default');
+          viewDir = 'views';
+        }
+        const rootDir = path.join(options.rootDir, viewDir);
+        let engineConfig = null;
+        if (carryList.has(userConfig.viewEngine.engine)) {
+          const def = carryList.get(userConfig.viewEngine.engine);
+          engineConfig = Object.assign(def, userConfig.viewEngine);
+        } else {
+          viewDir = 'views';
+          const def = carryList.get(DEF_ENGINE);
+          engineConfig = Object.assign(userConfig.viewEngine, def);
+          global.console.warn('the framework does not find the view engine you want to use,\
+           use ejs view engine by default');
+        }
+        debug('engineConfig %o', engineConfig);
+        return maiusViews(rootDir, {
+          extension: engineConfig.extension,
+          map: {
+            [engineConfig.extension]: engineConfig.engine,
+          },
+        });
+      },
+      name: 'koa-view',
     };
   }
 }
