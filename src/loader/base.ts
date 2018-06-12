@@ -2,10 +2,9 @@ import * as assert from 'assert';
 import * as Debug from 'debug';
 import * as fs from 'fs';
 import * as path from 'path';
-import { isFunction } from 'util';
 import BaseContext from '../lib/base-context';
 import FileItemModel from '../models/loader/file-item-model';
-import { isObject } from '../utils/index';
+import { isFunction, isObject } from '../utils/index';
 
 const debug = Debug('maius:baseLoader');
 
