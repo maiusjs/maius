@@ -91,7 +91,7 @@ export default class MiddlewareLoader {
       ...this.selfBeforeMdw,
       ...userMdwOpts,
       ...this.selfAfterMdw,
-    ];
+    ].filter(opt => opt);
 
     debug('combinedMiddleware: %O', combinedMdwOpts);
 
