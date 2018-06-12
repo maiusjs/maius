@@ -3,12 +3,11 @@ const { Controller } = require('../../dev/maius');
 module.exports = class HomeController extends Controller {
   constructor() {
     super();
-    this.info = this.info.bind(this);
+    this.info = this.getNumber.bind(this);
   }
 
-  async info(ctx, next) {
-    await ctx.render('index', {
-      msg: 'Welcome to Maius'
-    });
+  async getNumber(ctx, next) {
+    const number = await this.service.home.number(10);
+    ctx.body = number;
   }
 };
