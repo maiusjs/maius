@@ -1,23 +1,21 @@
-import * as KoaRouter from 'koa-router';
+import Maius from '../../maius';
+import ConfigMiddlewareItemModel from '../../models/mdw-opts-model';
+import { BaseMiddleware } from './base';
 
-class Router extends KoaRouter {
-  private maius: any;
+export default class RouterMdw extends BaseMiddleware {
 
-  /**
-   * @constructor
-   * @param {object} opts koa-router options
-   */
-
-  constructor(opts: KoaRouter.IRouterOptions) {
-    super(opts);
+  constructor(maius: Maius) {
+    super(maius);
   }
 
-  /**
-   *
-   */
+  public getMiddlewareOpts(): ConfigMiddlewareItemModel {
+    const opts = new ConfigMiddlewareItemModel();
 
-  // tslint:disable-next-line:no-empty
-  public resources(...args) { }
+    opts._couldReorder = true;
+    opts.name = 'maius:router';
+
+    opts.load = app => app.use(this.maius.router.routes());
+
+    return opts;
+  }
 }
-
-export default Router;

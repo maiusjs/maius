@@ -1,35 +1,69 @@
+import * as Debug from 'debug';
 import * as fs from 'fs';
 import * as path from 'path';
 import IUserConfig from '../interface/i-user-config';
 import IUserOptions from '../interface/i-user-options';
 
-const CONTENT = Symbol('content');
+const debug = Debug('maius:userConfigLoader');
 
 export default class UserConfigLoader {
-  public options: IUserOptions;
 
   /**
-   * @constructor
+   * Create a instance. Because this Class is an single instance class, will have
+   * only one instance, so this methods only be called
+   *
+   * @param options
+   * @returns UserConfigLoader instance
    */
 
-  constructor(options: IUserOptions) {
-    this.options = options;
+  public static create(options: IUserOptions): UserConfigLoader {
+    if (UserConfigLoader.instance) {
+      throw new Error(`UserConfigLoader has been instantiated!
+Please call UserConfigLoader.getInstance() to get instance.`);
+    }
+    UserConfigLoader.instance = new UserConfigLoader(options);
+    return UserConfigLoader.instance;
   }
 
   /**
-   * @since 0.1.0
+   * Get the instance.
+   *
+   * @returns UserConfigLoader instance
    */
 
-  get config(): IUserConfig {
-    if (this[CONTENT]) { return this[CONTENT]; }
+  public static getIntance() {
+    if (!UserConfigLoader.instance) {
+      throw new Error(`UserConfigLoader has not been instantiated!
+      Please call UserConfigLoader.create(options) to instantiate a instance.`);
+    }
+    return UserConfigLoader.instance;
+  }
 
+  private static instance: UserConfigLoader = null;
+
+  public options: IUserOptions;
+  public config: IUserConfig;
+
+  /**
+   * This is an single instance class.
+   *
+   * @constructor
+   */
+
+  private constructor(options: IUserOptions) {
+    this.options = options;
+    this.config = this.getConfig();
+  }
+
+  private getConfig() {
     const filename = path.join(this.options.rootDir, 'config.js');
-
     if (!fs.statSync(filename)) {
       throw new Error('Not found config.js in project root directory!');
     }
 
-    this[CONTENT] = require(filename);
-    return this[CONTENT];
+    const config = require(filename);
+    debug('User config: %o', config);
+
+    return config;
   }
 }

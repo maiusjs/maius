@@ -2,10 +2,11 @@ import * as assert from 'assert';
 import * as Debug from 'debug';
 import { Middleware } from 'koa';
 import * as path from 'path';
+import IUserConfig from './interface/i-user-config';
 import IUserOptions from './interface/i-user-options';
 import Application from './lib/application';
 import BaseContext from './lib/base-context';
-import Router from './lib/middleware/router';
+import Router from './lib/router';
 import ControllerLoader from './loader/controller';
 import MiddlewareLoader from './loader/middleware';
 import ServiceLoader from './loader/service';
@@ -23,6 +24,7 @@ class Maius {
   public static Service = BaseContext;
 
   public options: IUserOptions;
+  public config: IUserConfig;
   public app: Application;
   public router: Router;
   public controller: { [x: string]: BaseContext };
@@ -51,6 +53,14 @@ class Maius {
     this.options = options;
 
     /**
+     * UserConfigLoader is a single instance class. And the instance will be
+     * created here.
+     *
+     * @since 0.1.0
+     */
+    this.config = UserConfigLoader.create(this.options).config;
+
+    /**
      * Koa appliction instance
      *
      * @since 0.1.0
@@ -62,7 +72,7 @@ class Maius {
      *
      * @since 0.1.0
      */
-    this.router = new Router({});
+    this.router = new Router();
 
     /**
      * controller instances collection
@@ -81,11 +91,6 @@ class Maius {
     this.service = this.serviceLoader.getIntancesCol();
 
     debug('this.service %o', this.service);
-
-    /**
-     * @private
-     */
-    this.middleware = this.middlewareLoader.getMiddleware();
 
     this.setControllerAndServiceProps();
     this.loadUserRoutes();
@@ -110,19 +115,6 @@ class Maius {
     return new Promise(resolve => {
       this.app.listen(port, () => resolve());
     });
-  }
-
-  /**
-   * users config.js file content.
-   */
-
-  public get userConfig() {
-    if (this[USER_CONFIG]) {
-      return this[USER_CONFIG];
-    }
-
-    this[USER_CONFIG] = new UserConfigLoader(this.options).config;
-    return this[USER_CONFIG];
   }
 
   /**
@@ -193,17 +185,13 @@ class Maius {
   }
 
   /**
-   * Load user's middleware that the property 'afterRouter' is false.
-   * The property
+   * Load all middleware, includes users and maius internal middleware.
    *
    * @private
    */
 
   private useMiddleware(): void {
-    this.middleware.forEach(fn => {
-      debug('use middleware: %O %O', fn, fn && fn.name);
-      this.app.use(fn);
-    });
+    this.middlewareLoader.useAllMiddleware();
   }
 
   /**
@@ -212,7 +200,7 @@ class Maius {
    */
 
   private loadUserRoutes(): void {
-    const router = require(path.join(this.options.rootDir, 'router.js'))
+    const router = require(path.join(this.options.rootDir, 'router.js'));
     assert('function' === typeof router, 'router.js must be a function type!');
     router({
       controller: this.controller,

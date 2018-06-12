@@ -3,12 +3,13 @@ import * as Debug from 'debug';
 import * as fs from 'fs';
 import { Middleware } from 'koa';
 import * as path from 'path';
-import IUserConfig, { IUserConfigMiddlewareArrItem } from '../interface/i-user-config';
+import IUserConfig from '../interface/i-user-config';
 import IUserOptions from '../interface/i-user-options';
-import { maiusViews } from '../lib/middleware/maius-views';
-import maiusStatic from '../lib/middleware/static';
+import { BaseMiddleware } from '../lib/middleware/base';
 import Maius from '../maius';
-import { isObject } from '../utils/index';
+import MdwOptsModel from '../models/mdw-opts-model';
+import { isClass } from '../utils/index';
+import UserConfigLoader from './user-config';
 
 const debug = Debug('maius:middlewareLoader');
 const MIDDLEWARE = Symbol('middleware');
@@ -19,28 +20,28 @@ const MIDDLEWARE = Symbol('middleware');
 
 export default class MiddlewareLoader {
   private maius: Maius;
-  private options: IUserOptions;
+  private userOptions: IUserOptions;
   private userConfig: IUserConfig;
-  private selfBeforeMdw: IUserConfigMiddlewareArrItem[];
-  private selfAfterMdw: IUserConfigMiddlewareArrItem[];
+  private selfBeforeMdw: MdwOptsModel[];
+  private selfAfterMdw: MdwOptsModel[];
+  private willBeReorderdNames: Set<string>;
 
   /**
    * @constructor
    * @param options users options
-   * @param userConfig users config.js
    */
 
   constructor(maius: Maius) {
     /**
      * @private
      */
-    this.options = maius.options;
-    assert(this.options.rootDir);
+    this.userOptions = UserConfigLoader.getIntance().options;
+    assert(this.userOptions.rootDir);
 
     /**
      * @private
      */
-    this.userConfig = maius.userConfig;
+    this.userConfig = UserConfigLoader.getIntance().config;
 
     /**
      * @private
@@ -56,8 +57,7 @@ export default class MiddlewareLoader {
      * @private
      */
     this.selfBeforeMdw = [
-      this.selfStaticMiddleware(),
-      this.viewMiddleware(),
+      this.makeOneSelfMiddlewareOpts('maius:static'),
     ];
 
     /**
@@ -66,46 +66,64 @@ export default class MiddlewareLoader {
      * @private
      */
     this.selfAfterMdw = [
-      this.selfRouterMiddleware(),
+      this.makeOneSelfMiddlewareOpts('maius:router'),
     ];
+
+    this.willBeReorderdNames = new Set();
+  }
+
+  public useAllMiddleware(): void {
+    this.getAllMiddlewareOpts().forEach(opts => {
+
+      debug('Load one middleware: %o', opts);
+      let fn: Middleware = null;
+
+      // Customize middleware load method
+      if ('function' === typeof opts.load) {
+        opts.load(this.maius.app);
+
+      // The common way to load middleware.
+      } else {
+        const func = fs.existsSync(opts._filename) ?
+          require(opts._filename) :
+          require(opts.name);
+
+        assert(
+          typeof func === 'function',
+          `middleware ${opts.name} must be an function, but it is ${func}`,
+        );
+
+        fn = func.apply(func, opts.args);
+        // use the middleware.
+        this.maius.app.use(fn);
+      }
+    });
   }
 
   /**
-   * Get all middlewares, includes users and miaus'.
+   * Get all middlewares opts model, includes users and miaus'.
    *
    * @returns
    *
    * @since 0.1.0
    */
 
-  public getMiddleware(): Middleware[] {
-    if (this[MIDDLEWARE]) return this[MIDDLEWARE];
-
+  public getAllMiddlewareOpts(): MdwOptsModel[] {
     const middleware: Middleware[] = [];
-    const userMdwOpts: IUserConfigMiddlewareArrItem[] = this.getMiddlewareConfig();
+    const userMdwOpts: MdwOptsModel[] = this.getMiddlewareConfig();
 
     /**
      * Combine users middleware and maius' internal middlware.
      */
-    const combinedMdwOpts: IUserConfigMiddlewareArrItem[] = [
-      ...this.selfBeforeMdw,
-      ...userMdwOpts,
-      ...this.selfAfterMdw,
-    ].filter(opt => opt);
+    const combinedMdwOpts: MdwOptsModel[] = [
+      ...this.filterBeRordered(this.selfBeforeMdw),
+      ...this.mergeSelfOptsWithUserReorderedOpts(userMdwOpts),
+      ...this.filterBeRordered(this.selfAfterMdw),
+    ].filter(opts => opts);
 
     debug('combinedMiddleware: %O', combinedMdwOpts);
 
-    const reorderedMdwOpts = this.reorderMiddlewareOpts(combinedMdwOpts);
-
-    debug('reorderedMiddelware: %O', reorderedMdwOpts);
-
-    reorderedMdwOpts.forEach((opts, index) => {
-      const mdw: Middleware = this.loadOneMiddleware(opts);
-      middleware.push(mdw);
-    });
-
-    this[MIDDLEWARE] = middleware;
-    return this[MIDDLEWARE];
+    return combinedMdwOpts;
   }
 
   /**
@@ -114,17 +132,12 @@ export default class MiddlewareLoader {
    * @returns users middleware config
    */
 
-  private getMiddlewareConfig(): IUserConfigMiddlewareArrItem[] {
+  private getMiddlewareConfig(): MdwOptsModel[] {
     const middleware = this.userConfig.middleware || [];
     assert(Array.isArray(middleware), '[config] middleware property must be an array type.');
 
-    return middleware.map((opts, index) => {
-      const cfg: IUserConfigMiddlewareArrItem = {
-        _couldReorder: null,
-        _filename: null,
-        args: [],
-        name: null,
-      };
+    const optsList = middleware.map((opts, index) => {
+      let cfg = new MdwOptsModel();
 
       if ('string' === typeof opts) {
         cfg.name = opts;
@@ -139,7 +152,47 @@ export default class MiddlewareLoader {
 
       cfg._filename = path.join(this.getMiddlewareDir(), `${cfg.name}.js`);
 
+      // Only could set one maius middleware, the others will be remove.
+      if (this.willBeReorderdNames.has(cfg.name)) {
+        cfg = null; // remove this middleware
+      }
+
+      if (cfg && this.isSelfMiddlewareByOpts(cfg)) {
+        this.willBeReorderdNames.add(cfg.name);
+      }
+
       return cfg;
+    });
+
+    return optsList.filter(opts => opts !== null);
+  }
+
+  /**
+   * Filter out middleware that has been reordered.
+   */
+
+  private filterBeRordered(arr: MdwOptsModel[]): typeof arr {
+    return arr.filter(opts => {
+      return !this.willBeReorderdNames.has(opts.name);
+    });
+  }
+
+  /**
+   * Merge options for maius middleware configured by user in config.js
+   * with options for maius internal.
+   *
+   * @param arr the return value of this.getMiddlewareConfig() method.
+   * @returns a new options array
+   */
+
+  private mergeSelfOptsWithUserReorderedOpts(arr: MdwOptsModel[]): typeof arr {
+
+    return arr.map(opts => {
+      if (this.willBeReorderdNames.has(opts.name)) {
+        return this.makeOneSelfMiddlewareOpts(opts.name, opts);
+      }
+
+      return opts;
     });
   }
 
@@ -150,118 +203,45 @@ export default class MiddlewareLoader {
    */
 
   private getMiddlewareDir(): string {
-    return path.join(this.options.rootDir, 'middleware');
+    return path.join(this.userOptions.rootDir, 'middleware');
   }
 
   /**
-   * To load one middleware.
+   * To make a maius middleware opts (options).
    *
-   * @param opts
-   * @returns The middleware function.
+   * @param name a maius middleware's name
+   * @param newOpts this opts will be merged with initial opts.
+   * @returns a new middleware opts
    */
 
-  private loadOneMiddleware(opts: IUserConfigMiddlewareArrItem): Middleware {
-    debug('Load one middleware: %o', opts);
+  private makeOneSelfMiddlewareOpts(name, newOpts?: MdwOptsModel): typeof newOpts {
+    assert('string' === typeof name, 'arguments[0] must be a string type!');
+    assert(this.isSelfPrefix(name), 'it is not a internal middleware');
 
-    let fn: Middleware = null;
-
-    if ('function' === typeof opts.load) {
-      fn = opts.load(this.maius.app);
-    } else {
-      const func = fs.statSync(opts._filename) ?
-        require(opts._filename) :
-        require(opts.name);
-      assert(
-        typeof func === 'function',
-        `middleware ${opts.name} must be an function, but it is ${func}`,
-      );
-      fn = func.apply(func, opts.args);
-    }
-
-    return fn;
+    const mdw = this.requireSelfMiddlewareByName(name);
+    const opts = mdw.getMiddlewareOpts(newOpts);
+    return opts;
   }
 
   /**
-   * It could be reordered the middleware include users and maius's,
-   * if user setting it.
+   * Require the maius middleware class file, and new an instance.
    *
-   * @param arr
-   * @returns Filtered middlewareOpts.
+   * @name name maius middleware's name
+   * @returns the instance about this maius middleware class.
    */
 
-  private reorderMiddlewareOpts(arr: IUserConfigMiddlewareArrItem[]): typeof arr {
-    const reorderedNames = new Set<string>();
-    const removed = [];
+  private requireSelfMiddlewareByName(name: string): BaseMiddleware {
+    const rst = /^maius:(.*)$/.exec(name);
 
-    // find the names of that be reordered internal middleware.
-    arr.forEach(opts => {
-      if (opts._couldReorder) return;
+    debug('requireSelfMiddleware regexp result: %o', rst);
+    assert(rst && rst[1], 'name regexp match error!');
 
-      if (this.isSelfMiddleware(opts)) {
-        reorderedNames.add(opts.name);
-      }
-    });
+    const Mdw = require(path.resolve(__dirname, '../lib/middleware', rst[1])).default;
 
-    // filter the internal middleware that be ordered.
-    const filted = arr.filter(opt => {
-      // _couldReorder is true means that the middleware is an internal middleware and
-      // it could be reorder.
-      if (opt._couldReorder && reorderedNames.has(opt.name)) {
-        removed.push(opt);
-        return false;
-      }
-      return true;
-    });
+    assert(isClass(Mdw), `Mdw ${rst[1]} is not class`);
 
-    return filted.map(opt => {
-      if (!this.isSelfMiddleware(opt)) return opt;
-
-      // find the middleware that be removed away.
-      const removedMdw = this.findSelfMiddlewareOpt(removed, opt.name, true);
-      if (!removedMdw) {
-        return opt;
-      }
-
-      // assign user opt and internal opt.
-      return this.assignOpt(removedMdw, opt);
-    });
-  }
-
-  /**
-   * find the middleware by the conditions.
-   *
-   * @param arr source array.
-   * @param name the name of middleware.
-   * @param reorder the value of opt._couldReorder.
-   * @returns
-   */
-
-  private findSelfMiddlewareOpt(
-    arr: IUserConfigMiddlewareArrItem[],
-    name: string,
-    reorder: boolean,
-  ): IUserConfigMiddlewareArrItem {
-    let cfg: IUserConfigMiddlewareArrItem = null;
-
-    arr.forEach(opt => {
-      if (name === opt.name && !!reorder === opt._couldReorder) {
-        cfg = opt;
-      }
-    });
-
-    return cfg;
-  }
-
-  private assignOpt(opt1: IUserConfigMiddlewareArrItem, opt2: typeof opt1) {
-    const cfg: IUserConfigMiddlewareArrItem = {
-      _couldReorder: null,
-      _filename: null,
-      args: null,
-      load: null,
-      name: null,
-    };
-
-    return Object.assign(cfg, opt1, opt2);
+    const mdw: BaseMiddleware = new Mdw(this.maius);
+    return mdw;
   }
 
   /**
@@ -271,106 +251,11 @@ export default class MiddlewareLoader {
    * @returns
    */
 
-  private isSelfMiddleware(opts: IUserConfigMiddlewareArrItem): boolean {
-    return /^maius:/.test(opts.name);
+  private isSelfMiddlewareByOpts(opts: MdwOptsModel): boolean {
+    return this.isSelfPrefix(opts.name);
   }
 
-  /**
-   * Generate maius-static middleware options.
-   *
-   * @returns maius-static middleware options.
-   */
-
-  private selfStaticMiddleware(): IUserConfigMiddlewareArrItem {
-    const publicPath = path.join(this.options.rootDir, 'public');
-
-    try {
-      fs.readdirSync(publicPath);
-    } catch (e) {
-      return;
-    }
-
-    return {
-      _couldReorder: true,
-      load: () => {
-        return maiusStatic(publicPath, this.userConfig.static);
-      },
-      name: 'maius:static',
-    };
-  }
-
-  /**
-   * Generate maius-router middleware config
-   *
-   * @returns
-   */
-
-  private selfRouterMiddleware(): IUserConfigMiddlewareArrItem {
-    return {
-      _couldReorder: true,
-      load: () => {
-        return this.maius.router.routes();
-      },
-      name: 'maius:router',
-    };
-  }
-
-  /**
-   * Get view middlewares, includes users and maius
-   *
-   * @returns
-   *
-   * @since 0.1.0
-   */
-  private viewMiddleware(): IUserConfigMiddlewareArrItem {
-
-    const carryList: Map<string, any> = new Map();
-    const DEF_ENGINE = 'ejs';
-    carryList.set('ejs', {
-      engine: 'ejs',
-      extension: 'ejs',
-      viewsDir: 'views',
-    });
-    carryList.set('nunjucks', {
-      engine: 'nunjucks',
-      extension: 'html',
-      viewsDir: 'views',
-    });
-    return {
-      _couldReorder: false,
-      load: () => {
-        const options = this.maius.options;
-        const userConfig = this.maius.userConfig;
-        let viewDir = null;
-        if (isObject(userConfig.viewEngine)) {
-          viewDir = userConfig.viewEngine.viewsDir;
-        }
-        if (viewDir == null) {
-          global.console.warn('you do not have a configuration view folder,\
-            which uses the views folder by default');
-          viewDir = 'views';
-        }
-        const rootDir = path.join(options.rootDir, viewDir);
-        let engineConfig = null;
-        if (carryList.has(userConfig.viewEngine.engine)) {
-          const def = carryList.get(userConfig.viewEngine.engine);
-          engineConfig = Object.assign(def, userConfig.viewEngine);
-        } else {
-          viewDir = 'views';
-          const def = carryList.get(DEF_ENGINE);
-          engineConfig = Object.assign(userConfig.viewEngine, def);
-          global.console.warn('the framework does not find the view engine you want to use,\
-           use ejs view engine by default');
-        }
-        debug('engineConfig %o', engineConfig);
-        return maiusViews(rootDir, {
-          extension: engineConfig.extension,
-          map: {
-            [engineConfig.extension]: engineConfig.engine,
-          },
-        });
-      },
-      name: 'koa-view',
-    };
+  private isSelfPrefix(name: string) {
+    return /^maius:/.test(name);
   }
 }
