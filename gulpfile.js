@@ -19,13 +19,16 @@ const DEV_DIR = path.resolve('./dev');
 gulp.task('compile', () => gulp
   .src('src/**/*.ts')
   .pipe(sourcemaps.init())
-  .pipe(ts(Object.assign(tsconfig.compilerOptions, { })))
+  .pipe(ts(Object.assign(tsconfig.compilerOptions, {
+    declaration: false,
+  })))
   .pipe(sourcemaps.write())
   .pipe(gulp.dest(DEV_DIR)));
 
 gulp.task('compile:prd', () => gulp
   .src('src/**/*.ts')
-  .pipe(ts(Object.assign(tsconfig.compilerOptions, { })))
+  .pipe(ts(Object.assign(tsconfig.compilerOptions, {
+   })))
   .pipe(gulp.dest(DIST_DIR)));
 
 /**
