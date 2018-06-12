@@ -9,7 +9,9 @@ module.exports = class HomeController extends Controller {
   async info(ctx, next) {
     // console.log('Controller dealing with the request');
     const number = await this.service.home.number(10);
-    ctx.body = number;
-    await next();
+
+    await ctx.render('index', {
+      user: 'Maius'
+    });
   }
 };
