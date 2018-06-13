@@ -138,6 +138,26 @@ module.exports = {
 
 ```
 
+### 模板引擎
+```js
+// config.js
+
+module.exports = {
+   /**
+    * { engine } 配置使用的模板引擎
+    * { extension } 配置模板引擎文件扩展名
+    * { viewsDir } 配置模板引擎文件的目录
+    */
+   viewEngine: {
+    extension: 'ejs',
+    viewsDir: 'views',
+    engine: 'ejs',
+  },
+};
+
+```
+
+
 ## CLI 工具
 
 开发中...
