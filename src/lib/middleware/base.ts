@@ -4,7 +4,7 @@ import MdwOptsModel from '../../models/mdw-opts-model';
 import { isBoolean, isFunction, isObject } from '../../utils';
 
 /**
- * All internal middleware must to be extend from this class.
+ * All internal middleware must to be extended from this class.
  */
 export abstract class BaseMiddleware {
   protected maius: Maius;
@@ -25,7 +25,7 @@ export abstract class BaseMiddleware {
 
   public merge (source: MdwOptsModel, target: typeof source): typeof source {
     assert(isObject(source), 'arguments[0] must be ConfigMiddlewareItemModel instance');
-    assert(isObject(source), 'arguments[1] must be ConfigMiddlewareItemModel instance');
+    assert(isObject(target), 'arguments[1] must be ConfigMiddlewareItemModel instance');
 
     const opts = new MdwOptsModel();
 
