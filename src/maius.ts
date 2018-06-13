@@ -66,6 +66,7 @@ class Maius {
      * @since 0.1.0
      */
     this.app = new Application();
+    this.app.env = this.config.env;  // reset koa instance environment
 
     /**
      * maius router
