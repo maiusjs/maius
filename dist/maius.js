@@ -5,7 +5,7 @@ const Debug = require("debug");
 const path = require("path");
 const application_1 = require("./lib/application");
 const base_context_1 = require("./lib/base-context");
-const router_1 = require("./lib/middleware/router");
+const router_1 = require("./lib/router");
 const controller_1 = require("./loader/controller");
 const middleware_1 = require("./loader/middleware");
 const service_1 = require("./loader/service");
@@ -19,29 +19,22 @@ class Maius {
     constructor(options) {
         assert(typeof options.rootDir === 'string', 'options.rootDir config error!');
         this.options = options;
+        this.config = user_config_1.default.create(this.options).config;
         this.app = new application_1.default();
-        this.router = new router_1.default({});
+        this.router = new router_1.default();
         this.controller = this.controllerLoader.getIntancesCol();
         debug('this.controller %o', this.controller);
         this.service = this.serviceLoader.getIntancesCol();
         debug('this.service %o', this.service);
-        this.middleware = this.middlewareLoader.getMiddleware();
         this.setControllerAndServiceProps();
         this.loadUserRoutes();
         this.useMiddleware();
     }
-    listen(port) {
+    listen(port = this.options.port) {
         assert(typeof port === 'number', 'Maius.prototype.listen(port), port must be a number');
         return new Promise(resolve => {
             this.app.listen(port, () => resolve());
         });
-    }
-    get userConfig() {
-        if (this[USER_CONFIG]) {
-            return this[USER_CONFIG];
-        }
-        this[USER_CONFIG] = new user_config_1.default(this.options).config;
-        return this[USER_CONFIG];
     }
     get controllerLoader() {
         if (this[CONTROLLER_LOADER]) {
@@ -79,13 +72,12 @@ class Maius {
         });
     }
     useMiddleware() {
-        this.middleware.forEach(fn => {
-            debug('use middleware: %O %O', fn, fn && fn.name);
-            this.app.use(fn);
-        });
+        this.middlewareLoader.useAllMiddleware();
     }
     loadUserRoutes() {
-        require(path.join(this.options.rootDir, 'router.js'))({
+        const router = require(path.join(this.options.rootDir, 'router.js'));
+        assert('function' === typeof router, 'router.js must be a function type!');
+        router({
             controller: this.controller,
             router: this.router,
         });

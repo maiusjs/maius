@@ -1,13 +1,11 @@
-import Application from '../lib/application';
+import ConfigMiddlewareItemModel from '../models/mdw-opts-model';
 export default interface IUserConfig {
     middleware?: IUserConfigMiddlewareOpts[];
-    static: any;
+    staticOpts: any;
+    views: {
+        engine: string;
+        extension: string;
+        dir: string;
+    };
 }
-export declare type IUserConfigMiddlewareOpts = string | IUserConfigMiddlewareArrItem;
-export interface IUserConfigMiddlewareArrItem {
-    args?: any[];
-    name: string;
-    load?: (app: Application) => any;
-    _couldReorder?: boolean;
-    _filename?: string;
-}
+export declare type IUserConfigMiddlewareOpts = string | ConfigMiddlewareItemModel;

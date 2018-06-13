@@ -1,10 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isFunction = (fn) => {
-    const str = Object.prototype.toString.call(fn);
-    return str === '[object Function]';
+const isSomething = (type) => {
+    return arg => {
+        return {}.toString.call(arg) === `[object ${type}]`;
+    };
 };
-exports.isObject = (obj) => {
-    const str = Object.prototype.toString.call(obj);
-    return str === '[object Object]';
+exports.isFunction = isSomething('Function');
+exports.isObject = isSomething('Object');
+exports.isBoolean = isSomething('Boolean');
+exports.isClass = (cls, name) => {
+    const reg = new RegExp(`^\\s*class\\s+${name ? name + '\\b' : ''}`);
+    return typeof cls === 'function' && reg.test(cls.toString());
 };
