@@ -32,7 +32,7 @@ export default class Static extends BaseMiddleware {
     try {
       fs.readdirSync(publicPath);
     } catch (e) {
-      return;
+      // return;
     }
 
     cfg.name = 'maius:static';

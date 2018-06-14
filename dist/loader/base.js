@@ -1,11 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const assert = require("assert");
+const Debug = require("debug");
 const fs = require("fs");
 const path = require("path");
-const util_1 = require("util");
 const file_item_model_1 = require("../models/loader/file-item-model");
 const index_1 = require("../utils/index");
+const debug = Debug('maius:baseLoader');
 class BaseLoader {
     constructor(options) {
         assert(options.path, 'options.path cannot be ignored');
@@ -15,7 +16,7 @@ class BaseLoader {
         const col = {};
         this.getFiles().forEach(item => {
             const UserClass = require(item.path);
-            if (util_1.isFunction(UserClass)) {
+            if (index_1.isFunction(UserClass)) {
                 col[item.name] = new UserClass();
             }
             else if (index_1.isObject(UserClass)) {
@@ -34,7 +35,8 @@ class BaseLoader {
             list = fs.readdirSync(dir);
         }
         catch (error) {
-            throw new Error(`Cannot find ${dir} directory.`);
+            debug(`Cannot find "${dir}" directory.`);
+            return [];
         }
         const files = list
             .filter(item => /.*?\.js$/.test(item))

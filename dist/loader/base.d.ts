@@ -1,5 +1,5 @@
-import FileItemModel from '../models/loader/file-item-model';
 import BaseContext from '../lib/base-context';
+import FileItemModel from '../models/loader/file-item-model';
 export default abstract class BaseLoader {
     path: string;
     constructor(options: {

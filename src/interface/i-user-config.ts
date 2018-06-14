@@ -6,6 +6,7 @@ import ConfigMiddlewareItemModel from '../models/mdw-opts-model';
  */
 
 export default interface IUserConfig {
+  env?: string;
   middleware?: IUserConfigMiddlewareOpts[];
   staticOpts: any;
   views: {

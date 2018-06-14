@@ -2,24 +2,6 @@
 
 A framework for nodejs
 
-
-## Todo
-
-- [x] controller 和 service 的 this 指向问题
-- [ ] controller 和 service 可以递归的加载多层级的文件夹
-- [x] public 静态资源文件夹
-- [x] ServiceLoader 对非 Class Function 的支持
-- [ ] maius-static 中间件在洋葱模型中的位置可以通过配置来调整
-- [ ] 怎么配置 node_modules 中的 middleware
-- [ ] 拓展 koa-router 的功能, Restful API 的支持
-- [ ] CLI 工具
-    - init
-    - create controller [name]
-    - create service [name]
-- [ ] model 层
-- [ ] benchmark
-- [ ] 框架直接支持 TS 语言开发（后期考虑）
-
 ## 使用
 
 ### 项目结构

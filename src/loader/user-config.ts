@@ -62,6 +62,10 @@ Please call UserConfigLoader.getInstance() to get instance.`);
     }
 
     const config = require(filename);
+
+    if (!config.env) {
+      config.env = process.env.MAIUS_ENV || process.env.NODE_ENV || 'dev';
+    }
     debug('User config: %o', config);
 
     return config;
