@@ -36,6 +36,7 @@
     "koa-router": "^7.4.0",
     "koa-static": "^4.0.3",
     "koa-views": "^6.1.4",
+    "log4js": "^2.8.0",
     "methods": "^1.1.2",
     "nunjucks": "^3.1.3"
   },

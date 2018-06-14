@@ -2,10 +2,12 @@ import * as assert from 'assert';
 import * as Debug from 'debug';
 import { Middleware } from 'koa';
 import * as path from 'path';
+import * as log4js from 'log4js';
 import IUserConfig from './interface/i-user-config';
 import IUserOptions from './interface/i-user-options';
 import Application from './lib/application';
 import BaseContext from './lib/base-context';
+import Logger from './lib/logger';
 import Router from './lib/router';
 import ControllerLoader from './loader/controller';
 import MiddlewareLoader from './loader/middleware';
@@ -29,6 +31,7 @@ class Maius {
   public router: Router;
   public controller: { [x: string]: BaseContext };
   public service: { [x: string]: BaseContext };
+  public logger: log4js.Logger;
   private middleware: Middleware[];
 
   /**
@@ -58,6 +61,13 @@ class Maius {
      * @since 0.1.0
      */
     this.config = UserConfigLoader.create(this.options).config;
+
+    this.logger = Logger.create({
+      directory: this.config.logger.directory ||
+        path.resolve(this.options.rootDir + './logs'),
+      level: this.config.logger.level ||
+        (this.config.env === 'dev' ? 'DEBUG' : 'ERROR'),
+    }).getlogger();
 
     /**
      * Koa appliction instance
@@ -211,3 +221,4 @@ class Maius {
 
 export default Maius;
 module.exports = Maius;
+module.exports.Logger = Logger;

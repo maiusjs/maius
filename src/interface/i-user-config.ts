@@ -2,6 +2,15 @@ import Application from '../lib/application';
 import ConfigMiddlewareItemModel from '../models/mdw-opts-model';
 
 /**
+ * Logger config
+ */
+export interface ILoggerConfig {
+  directory?: string;
+  level?: string;
+  stdout?: boolean;
+}
+
+/**
  * Users config.js
  */
 
@@ -9,6 +18,7 @@ export default interface IUserConfig {
   env?: string;
   middleware?: IUserConfigMiddlewareOpts[];
   staticOpts: any;
+  logger?: ILoggerConfig;
   views: {
     engine: string;
     extension: string;
