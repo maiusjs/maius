@@ -1,5 +1,6 @@
 import * as assert from 'assert';
 import * as Debug from 'debug';
+import * as fs from 'fs';
 import * as koaViews from 'koa-views';
 import * as path from 'path';
 import IUserConfig from '../../interface/i-user-config';
@@ -38,14 +39,42 @@ export default class Static extends BaseMiddleware {
     cfg.name = 'maius:views';
     cfg._couldReorder = true;
 
+    const userCustomFilter =  this.getUserCustomFliter();
+    let options = this.viewsConfig;
+    if (userCustomFilter != null) {
+      options = Object.assign(this.viewsConfig, userCustomFilter);
+    }
+
     cfg.load = app => {
-      app.use(koaViews(this.viewsDir(), this.viewsConfig));
+      app.use(koaViews(this.viewsDir(), options));
     };
 
     const iopts = isObject(opts) ? opts : new ConfigMiddlewareItemModel();
     return this.merge(cfg, iopts);
   }
 
+  private getUserCustomFliter(): object {
+    const rootDir = this.maius.options.rootDir;
+    const flieName = 'filter';
+    const ext = '.js';
+    const fullFileName = `${flieName}${ext}`;
+    const filterDir = `${rootDir}/extend`;
+    if (!fs.existsSync(filterDir) || !fs.existsSync(`${filterDir}/${fullFileName}`)) {
+      debug('no filter file found');
+      return null;
+    }
+    const fliterObj = require(`${filterDir}/${fullFileName}`);
+    const obj = {
+      options: {
+        helpers: {},
+      },
+    };
+    Object.keys(fliterObj).forEach(key => {
+      obj.options.helpers[key] = fliterObj[key];
+    });
+    return obj;
+
+  }
   /**
    * @returns the path of views template directory
    */

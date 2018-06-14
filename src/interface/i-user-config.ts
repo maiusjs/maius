@@ -13,6 +13,7 @@ export default interface IUserConfig {
     engine: string;
     extension: string;
     dir: string;
+    option?: object;
   };
 }
 

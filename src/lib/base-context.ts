@@ -1,4 +1,3 @@
-
 import Application from './application';
 
 export default class BaseContext {
