@@ -2,7 +2,9 @@ import * as assert from 'assert';
 import * as Debug from 'debug';
 import * as fs from 'fs';
 import * as path from 'path';
+import Application from '../lib/application';
 import BaseContext from '../lib/base-context';
+import Maius from '../maius';
 import FileItemModel from '../models/loader/file-item-model';
 import { isFunction, isObject } from '../utils/index';
 
@@ -28,16 +30,17 @@ export default abstract class BaseLoader {
    * @since 0.1.0
    */
 
-  public getIntancesCol(): { [x: string]: BaseContext } {
-    const col = {};
-
+  public getIntancesCol(app: Application): { [x: string]: BaseContext } {
+    const col: any = Object.create({});
     this.getFiles().forEach(item => {
       const UserClass = require(item.path);
 
       if (isFunction(UserClass)) {
-        col[item.name] = new UserClass();
+        col[item.name] = new UserClass(app);
+        // col[item.name].app = app;
       } else if (isObject(UserClass)) {
         col[item.name] = UserClass;
+        col.app = app;
       } else {
         throw new Error(`${item.name}.js is not a class function`);
       }

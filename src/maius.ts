@@ -29,7 +29,6 @@ class Maius {
   public router: Router;
   public controller: { [x: string]: BaseContext };
   public service: { [x: string]: BaseContext };
-
   private middleware: Middleware[];
 
   /**
@@ -79,7 +78,7 @@ class Maius {
      *
      * @since 0.1.0
      */
-    this.controller = this.controllerLoader.getIntancesCol();
+    this.controller = this.controllerLoader.getIntancesCol(this.app);
 
     debug('this.controller %o', this.controller);
 
@@ -88,7 +87,7 @@ class Maius {
      *
      * @since 0.1.0
      */
-    this.service = this.serviceLoader.getIntancesCol();
+    this.service = this.serviceLoader.getIntancesCol(this.app);
 
     debug('this.service %o', this.service);
 
