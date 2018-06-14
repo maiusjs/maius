@@ -139,6 +139,19 @@ module.exports = {
 
 ```
 
+### 支持自定义过滤器
+#### 使用步骤：
+1. 项目目录下新建`extend`文件夹
+2. `extend`文件夹下新建`filter.js`
+   ```js
+   // extend.js
+    exports.stringLength = (str) => str.length;
+   ```
+3. 模板中使用
+   ```ejs
+    <%=helpers.stringLength('maius')%>
+   ```
+
 
 ## CLI 工具
 
