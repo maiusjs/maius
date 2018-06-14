@@ -2,7 +2,7 @@
   "name": "maius",
   "version": "0.0.1",
   "description": "A framework for Node.js",
-  "main": "./dist/maius.js",
+  "main": "./dev/maius.js",
   "scripts": {
     "test": "jest",
     "dist": "node_modules/.bin/gulp dist:prd",
@@ -40,7 +40,9 @@
     "nunjucks": "^3.1.3"
   },
   "devDependencies": {
+    "@types/axios": "^0.14.0",
     "@types/debug": "0.0.30",
+    "@types/ejs": "^2.6.0",
     "@types/jest": "^23.0.0",
     "@types/koa": "^2.0.45",
     "@types/koa-json": "^2.0.18",
