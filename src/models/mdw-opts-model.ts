@@ -1,9 +1,9 @@
-import Application from '../lib/application';
+import Maius from '../maius';
 
 export default class MdwOptsModel {
   public args?: any[];
   public name: string;
-  public load?: (app: Application) => any;
+  public load?: (app: Maius) => any;
   // tslint:disable-next-line:variable-name
   public _couldReorder?: boolean;
   // tslint:disable-next-line:variable-name

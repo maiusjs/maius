@@ -2,18 +2,26 @@ import * as assert from 'assert';
 import * as Debug from 'debug';
 import * as fs from 'fs';
 import * as path from 'path';
-import Application from '../lib/application';
 import BaseContext from '../lib/base-context';
 import Maius from '../maius';
-import FileItemModel from '../models/loader/file-item-model';
 import { isFunction, isObject } from '../utils/index';
 
 const debug = Debug('maius:baseLoader');
+
+/**
+ * ServiceLoader and ControllerLoader will extends from BaseLoader.
+ *
+ * this.getIntancesCol() this a common method for ServiceLoader and
+ * ControllerLoader.
+ *
+ * @class
+ */
 
 export default abstract class BaseLoader {
   public path: string;
 
   /**
+   * @constructor
    * @param options      loader options
    * @param options.path user's target directory path
    */
@@ -30,7 +38,7 @@ export default abstract class BaseLoader {
    * @since 0.1.0
    */
 
-  public getIntancesCol(app: Application): { [x: string]: BaseContext } {
+  public getIntancesCol(app: Maius): { [x: string]: BaseContext } {
     const col: any = Object.create({});
     this.getFiles().forEach(item => {
       const UserClass = require(item.path);
@@ -56,7 +64,7 @@ export default abstract class BaseLoader {
    * @since 0.1.0
    */
 
-  protected getFiles(): FileItemModel[] {
+  protected getFiles(): { name: string, path: string }[] {
     const dir = this.path;
     let list: string[] = null;
 
@@ -73,10 +81,10 @@ export default abstract class BaseLoader {
       // 过滤掉所有非 .js 结尾的文件
       .filter(item => /.*?\.js$/.test(item))
       .map(item => {
-        const fileItem = new FileItemModel();
-        fileItem.name = /(.*?)\.js$/.exec(item)[1];
-        fileItem.path = path.join(dir, item);
-        return fileItem;
+        return {
+          name: /(.*?)\.js$/.exec(item)[1],
+          path: path.join(dir, item),
+        };
       });
 
     return files;

@@ -81,7 +81,7 @@ export default class MiddlewareLoader {
 
       // Customize middleware load method
       if ('function' === typeof opts.load) {
-        opts.load(this.maius.app);
+        opts.load(this.maius);
 
       // The common way to load middleware.
       } else {
@@ -96,7 +96,7 @@ export default class MiddlewareLoader {
 
         fn = func.apply(func, opts.args);
         // use the middleware.
-        this.maius.app.use(fn);
+        this.maius.use(fn);
       }
     });
   }

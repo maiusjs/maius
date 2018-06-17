@@ -6,7 +6,7 @@ module.exports = {
     'outer',
     'timing',
 
-    'maius:router', // reordered middleware.
+    // 'maius:router', // reordered middleware.
 
     // koa-middleware example with simple example
     'kcors',
@@ -23,21 +23,21 @@ module.exports = {
         }
       ],
     },
-
-    // middleware with `afterRouter` option
     {
       name: 'after',
       args: [{
         name: 'nihao'
       }],
-      afterRouter: true,
     },
   ],
   static: { },
-  viewEngine: {
-    extension: 'ejs',
-    viewsDir: 'views',
-    engine: 'ejs',
+  views: {
+    // engine: 'nunjuck',
+    // extension: 'html',
+    // dir: '',
+    // option: {
+    //   option: {  },
+    // },
   },
 };
 

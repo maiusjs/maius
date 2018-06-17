@@ -1,13 +1,13 @@
-import Application from './application';
+import Maius from '../maius';
 
 export default class BaseContext {
   public baseConstructor: typeof BaseContext;
   public service: any;
   public controller: any;
-  public app: Application;
+  public app: Maius;
 
-  constructor(app: Application) {
-    this.app = app;
+  constructor(maius: Maius) {
+    this.app = maius;
   }
   public bindService(service: object) {
     this.service = service;
