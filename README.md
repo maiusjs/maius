@@ -1,5 +1,7 @@
 # Maius
 
+[![Build Status](https://travis-ci.org/maiusjs/maius.svg?branch=master)](https://travis-ci.org/maiusjs/maius)
+
 A framework for nodejs
 
 ## 使用
@@ -28,7 +30,7 @@ const app = new Maius({
   port: 3123,
 });
 
-app.listen().then(() => {
+app.run().then(() => {
   console.log('http://localhost:3123');
 });
 ```
@@ -60,6 +62,7 @@ module.exports = class HomeController extends Controller {
   async hello(ctx, next) {
     ctx.body = 'hello world';
   }
+
   async number(ctx, next) {
     const number = await this.service.home.number(10);
     ctx.body = number;
@@ -79,6 +82,7 @@ module.exports = class HomeService extends Service {
     super();
     this.number = this.number.bind(this);
   }
+
   async number(num) {
     return num + 100;
   }
@@ -109,11 +113,10 @@ module.exports = {
    * 或者通过一个对象进行详细配置。
    */
   middleware: [
-    'log', // log 中间件将被包裹在洋葱模型的最外层
+    'log', // log 中间件将被包裹在洋葱模型的较外层
     {
       name: 'after', // 中间件对应的文件名
-      options: { name: 'nihao' }, // 这个字段的值将最为中间件的参数传入。
-      afterRouter: true, // 如果该值为 true, 该中间件将会被放在 router 之后执行
+      args: [{ name: 'maius' }] // 该数组的每一项将会按顺序传递给中间件
     },
   ],
 };
@@ -121,6 +124,7 @@ module.exports = {
 ```
 
 ### 模板引擎
+
 ```js
 // config.js
 
@@ -130,6 +134,7 @@ module.exports = {
     * { extension } 配置模板引擎文件扩展名
     * { viewsDir } 配置模板引擎文件的目录
     */
+
    viewEngine: {
     extension: 'ejs',
     viewsDir: 'views',
@@ -140,7 +145,9 @@ module.exports = {
 ```
 
 ### 支持自定义过滤器
+
 #### 使用步骤：
+
 1. 项目目录下新建`extend`文件夹
 2. `extend`文件夹下新建`filter.js`
    ```js
