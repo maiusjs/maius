@@ -66,7 +66,7 @@ gulp.task('server', () => {
         console.log(chalk.red('Error detected, attempting reboot...'));
         break;
       case 1:
-        console.log(chalk.red('The port alreay in use'));
+        // console.log(chalk.red('The port alreay in use'));
         break;
       default:
         break;
@@ -106,4 +106,12 @@ gulp.task('server.restart', cb => {
  * 监听 src 目录下的文件改动，重新编译项目，并重启 Node 进程
  */
 
-gulp.task('watch', ['server.restart'], () => gulp.watch('src/**/*', ['server.restart']));
+const wat = gulp.task('watch', ['server.restart'], () => gulp.watch('src/**/*', ['server.restart']));
+
+/**
+ * 监听 demo 目录下的文件变动，重启 Node 进程。
+ */
+
+gulp.task('demo.watch', [], () => gulp.watch('demo/**/*.js', ['server']));
+
+gulp.task('dev', ['watch', 'demo.watch']);

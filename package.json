@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest",
     "dist": "node_modules/.bin/gulp dist:prd",
-    "dev": "DEBUG=maius:* node_modules/.bin/gulp watch"
+    "dev": "DEBUG=maius:* node_modules/.bin/gulp dev"
   },
   "repository": {
     "type": "git",
