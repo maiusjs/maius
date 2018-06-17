@@ -95,8 +95,9 @@ export default class Static extends BaseMiddleware {
 
     const config = this.supportMap.get(engine);
 
-    assert(config, 'the framework does not find the view engine you want to use,' +
-      'use ejs view engine by default');
+    assert(config, 'The framework did not found the view engine you want to use, ' +
+      'you can use these view engine: ' +
+      [...this.supportMap.keys()].map(item => `"${item}"`).join(', '));
 
     config.dir = (userConfig && userConfig.dir) || config.dir;
     config.extension = (userConfig && userConfig.extension) || config.extension;
