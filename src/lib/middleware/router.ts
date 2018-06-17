@@ -14,7 +14,7 @@ export default class RouterMdw extends BaseMiddleware {
     opts._couldReorder = true;
     opts.name = 'maius:router';
 
-    opts.load = app => app.use(this.maius.router.routes());
+    opts.load = use => use(this.maius.router.routes());
 
     return opts;
   }

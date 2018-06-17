@@ -73,6 +73,10 @@ export default class MiddlewareLoader {
     this.willBeReorderdNames = new Set();
   }
 
+  /**
+   * to use all middleware one by one
+   */
+
   public useAllMiddleware(): void {
     this.getAllMiddlewareOpts().forEach(opts => {
 
@@ -81,7 +85,7 @@ export default class MiddlewareLoader {
 
       // Customize middleware load method
       if ('function' === typeof opts.load) {
-        opts.load(this.maius);
+        opts.load(this.maius.use.bind(this.maius));
 
       // The common way to load middleware.
       } else {

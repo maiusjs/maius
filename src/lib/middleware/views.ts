@@ -45,9 +45,7 @@ export default class Static extends BaseMiddleware {
       options = Object.assign(this.viewsConfig, userCustomFilter);
     }
 
-    cfg.load = app => {
-      app.use(koaViews(this.viewsDir(), options));
-    };
+    cfg.load = use => use(koaViews(this.viewsDir(), options));
 
     const iopts = isObject(opts) ? opts : new ConfigMiddlewareItemModel();
     return this.merge(cfg, iopts);
