@@ -14,11 +14,27 @@ import { BaseMiddleware } from './base';
 const debug = Debug('maius:viewsMiddlware');
 type IConfig = IUserConfig['views'];
 
+interface IViewsConfig {
+  dir: string;
+  options: {
+    map: { [x: string]: string };
+    extension: string;
+    options?: {
+      helpers?: {
+        [x: string]: (...args: any[]) => any;
+      };
+      partials?: {
+        [x: string]: string;
+      };
+    };
+  };
+}
+
 export default class Static extends BaseMiddleware {
   private userConfig: IUserConfig;
   private userOptions: IUserOptions;
   private supportMap: Map<string, IConfig>;
-  private viewsConfig: IConfig;
+  private viewsConfig: IViewsConfig;
 
   constructor(maius: Maius) {
     super(maius);
@@ -39,13 +55,27 @@ export default class Static extends BaseMiddleware {
     cfg.name = 'maius:views';
     cfg._couldReorder = true;
 
-    const userCustomFilter =  this.getUserCustomFliter();
-    let options = this.viewsConfig;
+    const userCustomFilter: any = this.getUserCustomFliter();
+    const options = this.viewsConfig;
+    debug('views-options-b: o%', options);
+    debug('views-options-b: o%', userCustomFilter);
     if (userCustomFilter != null) {
-      options = Object.assign(this.viewsConfig, userCustomFilter);
+      options.options = Object.assign({}, options.options, userCustomFilter);
     }
-
-    cfg.load = use => use(koaViews(this.viewsDir(), options));
+    const test = {
+      dir: 'views',
+      extension: 'ejs',
+      options: {
+        helpers: {
+          domain: '',
+          relativeTime: '',
+          stringLength: '',
+        },
+        map: { ejs: 'ejs' },
+      },
+    };
+    debug('views-options-a: o%', options);
+    cfg.load = use => use(koaViews(this.viewsDir(), options.options));
 
     const iopts = isObject(opts) ? opts : new ConfigMiddlewareItemModel();
     return this.merge(cfg, iopts);
@@ -57,12 +87,16 @@ export default class Static extends BaseMiddleware {
     const ext = '.js';
     const fullFileName = `${flieName}${ext}`;
     const filterDir = `${rootDir}/extend`;
-    if (!fs.existsSync(filterDir) || !fs.existsSync(`${filterDir}/${fullFileName}`)) {
+    if (
+      !fs.existsSync(filterDir) ||
+      !fs.existsSync(`${filterDir}/${fullFileName}`)
+    ) {
       debug('no filter file found');
       return null;
     }
     const fliterObj = require(`${filterDir}/${fullFileName}`);
     const obj = {
+      // dir: this.userConfig.views.dir,
       options: {
         helpers: {},
       },
@@ -71,7 +105,6 @@ export default class Static extends BaseMiddleware {
       obj.options.helpers[key] = fliterObj[key];
     });
     return obj;
-
   }
   /**
    * @returns the path of views template directory
@@ -87,21 +120,32 @@ export default class Static extends BaseMiddleware {
    * @returns merged config.
    */
 
-  private makeViewsConfig(): IConfig {
+  private makeViewsConfig(): IViewsConfig {
     const userConfig = this.userConfig.views;
     const engine = (userConfig && userConfig.engine) || 'ejs';
 
     const config = this.supportMap.get(engine);
 
-    assert(config, 'The framework did not found the view engine you want to use, ' +
-      'you can use these view engine: ' +
-      [...this.supportMap.keys()].map(item => `"${item}"`).join(', '));
+    assert(
+      config,
+      'The framework did not found the view engine you want to use, ' +
+        'you can use these view engine: ' +
+        [...this.supportMap.keys()].map(item => `"${item}"`).join(', '),
+    );
 
     config.dir = (userConfig && userConfig.dir) || config.dir;
     config.extension = (userConfig && userConfig.extension) || config.extension;
+    const newConfig: IViewsConfig = {
+      dir: config.dir,
+      options: {
+        extension: config.extension,
+        map: {
+          [config.extension]: engine,
+        },
+      },
+    };
+    debug('engineConfig %o', newConfig);
 
-    debug('engineConfig %o', config);
-
-    return config;
+    return newConfig;
   }
 }
