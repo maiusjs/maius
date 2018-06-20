@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import { isFunction } from '../utils/index';
+import { isFunction } from '../utils/type';
 import BaseLoader from './base';
 
 /**

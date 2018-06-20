@@ -8,7 +8,7 @@ import IUserOptions from '../interface/i-user-options';
 import { BaseMiddleware } from '../lib/middleware/base';
 import Maius from '../maius';
 import MdwOptsModel from '../models/mdw-opts-model';
-import { isClass } from '../utils/index';
+import { isClass } from '../utils/type';
 import UserConfigLoader from './user-config';
 
 const debug = Debug('maius:middlewareLoader');

@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 import Maius from '../../maius';
 import MdwOptsModel from '../../models/mdw-opts-model';
-import { isBoolean, isFunction, isObject } from '../../utils';
+import { isBoolean, isFunction, isObject } from '../../utils/type';
 
 /**
  * All internal middleware must to be extended from this class.

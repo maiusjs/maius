@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import BaseContext from '../lib/base-context';
 import Maius from '../maius';
-import { isFunction, isObject } from '../utils/index';
+import { isFunction, isObject } from '../utils/type';
 
 const debug = Debug('maius:baseLoader');
 

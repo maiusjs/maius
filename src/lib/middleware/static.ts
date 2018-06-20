@@ -6,7 +6,7 @@ import IUserOptions from '../../interface/i-user-options';
 import UserConfigLoader from '../../loader/user-config';
 import Maius from '../../maius';
 import ConfigMiddlewareItemModel from '../../models/mdw-opts-model';
-import { isObject } from '../../utils/index';
+import { isObject } from '../../utils/type';
 import { BaseMiddleware } from './base';
 
 export default class Static extends BaseMiddleware {
