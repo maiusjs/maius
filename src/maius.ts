@@ -110,7 +110,7 @@ class Maius extends KoaApplication {
      *
      * @since 0.1.0
      */
-    this.controller = this.controllerLoader.getIntancesCol(this);
+    this.controller = this.controllerLoader.getIntancesCol();
 
     debug('this.controller %o', this.controller);
 
@@ -119,14 +119,13 @@ class Maius extends KoaApplication {
      *
      * @since 0.1.0
      */
-    this.service = this.serviceLoader.getIntancesCol(this);
+    this.service = this.serviceLoader.getIntancesCol();
 
     debug('this.service %o', this.service);
 
     /**
      * Init something
      */
-    this.setControllerAndServiceProps();
     this.loadUserRoutes();
     this.useMiddleware();
   }
@@ -234,7 +233,7 @@ class Maius extends KoaApplication {
       return this[CONTROLLER_LOADER];
     }
 
-    this[CONTROLLER_LOADER] = new ControllerLoader({
+    this[CONTROLLER_LOADER] = new ControllerLoader(this, {
       path: path.join(this.options.rootDir, 'controller'),
     });
     return this[CONTROLLER_LOADER];
@@ -251,7 +250,7 @@ class Maius extends KoaApplication {
       return this[SERVICE_LOADER];
     }
 
-    this[SERVICE_LOADER] = new ServiceLoader({
+    this[SERVICE_LOADER] = new ServiceLoader(this, {
       path: path.join(this.options.rootDir, 'service'),
     });
     return this[SERVICE_LOADER];
@@ -270,24 +269,6 @@ class Maius extends KoaApplication {
 
     this[MIDDLEWARE_LOADER] = new MiddlewareLoader(this);
     return this[MIDDLEWARE_LOADER];
-  }
-
-  /**
-   * Controller and Service instances will bind controller and service
-   * in their context.
-   *
-   * @private
-   */
-
-  private setControllerAndServiceProps(): void {
-    Object.keys(this.controller).forEach(key => {
-      this.controller[key].bindController(this.controller);
-      this.controller[key].bindService(this.service);
-    });
-    Object.keys(this.service).forEach(key => {
-      this.service[key].bindController(this.controller);
-      this.service[key].bindService(this.service);
-    });
   }
 
   /**

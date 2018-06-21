@@ -1,11 +1,16 @@
-const isSomething = (type): (arg: any) => boolean => {
+const isSomething = (...types: string[]): (arg: any) => boolean => {
 
   return arg => {
-    return {}.toString.call(arg) === `[object ${type}]`;
+    for (const type of types) {
+      if ({}.toString.call(arg) === `[object ${type}]`) {
+        return true;
+      }
+    }
+    return false;
   };
 };
 
-export const isFunction = isSomething('Function');
+export const isFunction = isSomething('Function', 'AsyncFunction');
 export const isObject = isSomething('Object');
 export const isBoolean = isSomething('Boolean');
 

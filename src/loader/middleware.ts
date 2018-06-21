@@ -126,7 +126,7 @@ export default class MiddlewareLoader {
       ...this.filterBeRordered(this.selfAfterMdw),
     ].filter(opts => opts);
 
-    debug('combinedMiddleware: %O', combinedMdwOpts);
+    // debug('combinedMiddleware: %O', combinedMdwOpts);
 
     return combinedMdwOpts;
   }

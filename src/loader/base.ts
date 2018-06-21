@@ -19,6 +19,7 @@ const debug = Debug('maius:baseLoader');
 
 export default abstract class BaseLoader {
   public path: string;
+  public maius: Maius;
 
   /**
    * @constructor
@@ -26,9 +27,10 @@ export default abstract class BaseLoader {
    * @param options.path user's target directory path
    */
 
-  constructor(options: { path?: string }) {
+  constructor(maius: Maius, options: { path?: string }) {
     assert(options.path, 'options.path cannot be ignored');
     this.path = options.path;
+    this.maius = maius;
   }
 
   /**
@@ -38,17 +40,15 @@ export default abstract class BaseLoader {
    * @since 0.1.0
    */
 
-  public getIntancesCol(app: Maius): { [x: string]: BaseContext } {
+  public getIntancesCol(): { [x: string]: BaseContext } {
     const col: any = Object.create({});
+
     this.getFiles().forEach(item => {
       const UserClass = require(item.path);
-
       if (isFunction(UserClass)) {
-        col[item.name] = new UserClass(app);
-        // col[item.name].app = app;
+        col[item.name] = this.wrapClass(UserClass);
       } else if (isObject(UserClass)) {
-        col[item.name] = UserClass;
-        col.app = app;
+        col[item.name] = this.wrapObject(UserClass);
       } else {
         throw new Error(`${item.name}.js is not a class function`);
       }
@@ -88,5 +88,59 @@ export default abstract class BaseLoader {
       });
 
     return files;
+  }
+
+  /**
+   * Bind the context for Class to avoid losing context on the router.
+   *
+   * @param instance Users Controller or Service Class instance.
+   */
+
+  private wrapClass(UserClass) {
+    const instance = new UserClass(this.maius);
+    const bindedMethods: string[] = [];
+    let proto = Object.getPrototypeOf(instance);
+
+    while (proto !== Object.prototype) {
+      const keys = Object.getOwnPropertyNames(proto);
+
+      for (const key of keys) {
+        if (key === 'constructor') continue;
+
+        // skip getter, setter & non-function properties & already binded props
+        const d = Object.getOwnPropertyDescriptor(proto, key);
+        debug('%o %o', d.value, bindedMethods);
+        debug(isFunction(d.value));
+        if (isFunction(d.value) && bindedMethods.indexOf(key) < 0) {
+          bindedMethods.push(key);
+          instance[key] = proto[key].bind(instance);
+          debug('wrapClass', key);
+        }
+      }
+
+      proto = Object.getPrototypeOf(proto);
+    }
+
+    return instance;
+  }
+
+  /**
+   * Bind the context for Object to avoid losing context on the router.
+   *
+   * @param obj Users Controller or Service object.
+   */
+
+  private wrapObject(obj) {
+    const keys = Object.keys(obj);
+
+    for (const key of keys) {
+      if (isFunction(obj[key])) {
+        obj[key] = obj[key].bind(obj);
+      } else if (isObject(obj[key])) {
+        this.wrapObject(obj[key]);
+      }
+    }
+
+    return obj;
   }
 }
