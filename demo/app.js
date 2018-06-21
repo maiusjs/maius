@@ -4,6 +4,6 @@ const app = new Maius({
   rootDir: __dirname,
 });
 
-app.run().then(() => {
+app.listen(3123).then(() => {
   console.log('http://localhost:3123');
 });

@@ -1,8 +1,8 @@
 import * as assert from 'assert';
 import * as Debug from 'debug';
+import * as http from 'http';
 import * as KoaApplication from 'koa';
 import * as log4js from 'log4js';
-import { ListenOptions } from 'net';
 import * as path from 'path';
 import IUserConfig from './interface/i-user-config';
 import IUserOptions from './interface/i-user-options';
@@ -130,97 +130,29 @@ class Maius extends KoaApplication {
     this.useMiddleware();
   }
 
-  /* tslint:disable:unified-signatures */
-
   /**
-   * Run appcation at port
-   *
-   * promiseify this.listen
-   *
-   * @param port run app at the port
-   * @returns listen done
-   *
-   * @since 0.1.0
-   *
-   * Cannot override the return value of koaApplication.listen in typescipt.
-   * If we found a way to override return value in future, we'd better go to
-   * override koaApplication.listen method.
+   * promisify listen method
    */
 
-  public run(): Promise<void>;
-  public run(
-    port?: number,
-    hostname?: string,
-    backlog?: number,
-    listeningListener?: () => void,
-  ): Promise<void>;
-  public run(
-    port: number,
-    hostname?: string,
-    listeningListener?: () => void,
-  ): Promise<void>;
-  public run(
-    port: number,
-    backlog?: number,
-    listeningListener?: () => void,
-  ): Promise<void>;
-  public run(port: number, listeningListener?: () => void): Promise<void>;
-  public run(
-    path: string,
-    backlog?: number,
-    listeningListener?: () => void,
-  ): Promise<void>;
-  public run(path: string, listeningListener?: () => void): Promise<void>;
-  public run(options: ListenOptions, listeningListener?: () => void): Promise<void>;
-  public run(
-    handle: any,
-    backlog?: number,
-    listeningListener?: () => void,
-  ): Promise<void>;
-  public run(handle: any, listeningListener?: () => void): Promise<void>;
-  public run(...args): Promise<void> {
-
+  public listen(...args): any {
     return new Promise((resolve, reject) => {
       if (args.length === 0) {
         args[0] = this.options.port || 3123;
         if (args[0] === 3123) {
-          this.logger.info('The application is running at default port: 3123');
+          this.logger.info('The application will running at default port: 3123');
         }
       }
 
-      const cb: any = e => {
+      const server = http.createServer(this.callback());
+      server.listen(...args, e => {
         if (e) {
           reject(e);
           return;
         }
         resolve();
-      };
-
-      this.listen(...args, cb);
+      });
     });
   }
-
-  // public listen(...args): any {
-  //   let fn = null;
-  //   if (typeof args[args.length - 1] === 'function') {
-  //     fn = args.pop();
-  //   }
-
-  //   // this.callback is in the KoaApplication.
-  //   const server = createServer(this.callback());
-
-  //   server.listen();
-
-  //   return new Promise((resolve, reject) => {
-  //     server.listen(...args, e => {
-  //       if (e) {
-  //         reject(e);
-  //         return;
-  //       }
-  //       resolve();
-  //     });
-  //   });
-  // }
 
   /**
    * controller loader, and the loader is a single instance.

@@ -109,12 +109,9 @@ export default abstract class BaseLoader {
 
         // skip getter, setter & non-function properties & already binded props
         const d = Object.getOwnPropertyDescriptor(proto, key);
-        debug('%o %o', d.value, bindedMethods);
-        debug(isFunction(d.value));
         if (isFunction(d.value) && bindedMethods.indexOf(key) < 0) {
           bindedMethods.push(key);
           instance[key] = proto[key].bind(instance);
-          debug('wrapClass', key);
         }
       }
 
