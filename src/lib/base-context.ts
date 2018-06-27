@@ -1,12 +1,13 @@
-import Maius from '../maius';
-import { HttpClient, httpClient } from './httpclient';
+import Maius, { MaiusContext } from '../maius';
 
 export default class BaseContext {
   public baseConstructor: typeof BaseContext;
   public app: Maius;
+  public ctx: MaiusContext;
 
   constructor(maius: Maius) {
     this.app = maius;
+    this.ctx = maius.ctx;
   }
 
   /**

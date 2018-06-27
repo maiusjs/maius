@@ -1,4 +1,6 @@
+import * as accepts from 'accepts';
 import * as assert from 'assert';
+import * as Cookies from 'cookies';
 import * as Debug from 'debug';
 import * as http from 'http';
 import * as KoaApplication from 'koa';
@@ -16,6 +18,8 @@ import ServiceLoader from './loader/service';
 import UserConfigLoader from './loader/user-config';
 
 type Middleware = KoaApplication.Middleware;
+
+export type MaiusContext = KoaApplication.Context;
 
 const debug = Debug('maius:maius');
 
@@ -36,6 +40,7 @@ class Maius extends KoaApplication {
   public service: { [x: string]: BaseContext };
   public logger: log4js.Logger;
   public httpClient: HttpClient;
+  public ctx: KoaApplication.Context;
   // private middleware: Middleware[];
 
   /**
@@ -154,6 +159,27 @@ class Maius extends KoaApplication {
     });
   }
 
+  public createContext(req, res) {
+    const context = Object.create(this.context);
+    this.ctx = context;
+    const request = context.request = Object.create(this.request);
+    const response = context.response = Object.create(this.response);
+    context.app = request.app = response.app = this;
+    context.req = request.req = response.req = req;
+    context.res = request.res = response.res = res;
+    request.ctx = response.ctx = context;
+    request.response = response;
+    response.request = request;
+    context.originalUrl = request.originalUrl = req.url;
+    context.cookies = new Cookies(req, res, {
+      keys: this.keys,
+      secure: request.secure,
+    });
+    request.ip = request.ips[0] || req.socket.remoteAddress || '';
+    context.accept = request.accept = accepts(req);
+    context.state = {};
+    return context;
+  }
   /**
    * controller loader, and the loader is a single instance.
    *

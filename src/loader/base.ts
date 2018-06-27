@@ -44,9 +44,17 @@ export default abstract class BaseLoader {
     const col: any = Object.create({});
 
     this.getFiles().forEach(item => {
+      debug('Loading file: %o', item);
+
       const UserClass = require(item.path);
+
+      debug('file export: %o', UserClass);
+
       if (isFunction(UserClass)) {
         col[item.name] = this.wrapClass(UserClass);
+      } else if (isObject(UserClass) && isFunction(UserClass.default)) {
+        // es6 module
+        col[item.name] = this.wrapClass(UserClass.default);
       } else if (isObject(UserClass)) {
         col[item.name] = this.wrapObject(UserClass);
       } else {
@@ -104,12 +112,15 @@ export default abstract class BaseLoader {
     while (proto !== Object.prototype) {
       const keys = Object.getOwnPropertyNames(proto);
 
+      debug('wrap class keys array: %o', keys);
+
       for (const key of keys) {
         if (key === 'constructor') continue;
 
         // skip getter, setter & non-function properties & already binded props
         const d = Object.getOwnPropertyDescriptor(proto, key);
         if (isFunction(d.value) && bindedMethods.indexOf(key) < 0) {
+          debug('pushed key: %s', key);
           bindedMethods.push(key);
           instance[key] = proto[key].bind(instance);
         }
@@ -129,6 +140,8 @@ export default abstract class BaseLoader {
 
   private wrapObject(obj) {
     const keys = Object.keys(obj);
+
+    debug('wrap object keys array: %o', keys);
 
     for (const key of keys) {
       if (isFunction(obj[key])) {
