@@ -35,8 +35,10 @@
 
 #### examples
 
-- [ ] hackernews
+- [x] hackernews
+- [ ] hackernews-ts
+- [ ] hackernews-ts-di
 
 #### Planning, Ideas
-- [ ] 框架直接支持 TS 语言开发（后期考虑）
+- [x] 框架直接支持 TS 语言开发（后期考虑）
 - [ ] plugin 机制, 需要先想清楚它的使用场景. 它的价值和要解决的问题.
