@@ -36,7 +36,7 @@
 #### examples
 
 - [x] hackernews
-- [ ] hackernews-ts
+- [x] hackernews-ts
 - [ ] hackernews-ts-di
 
 #### Planning, Ideas
