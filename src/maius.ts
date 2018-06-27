@@ -144,7 +144,9 @@ class Maius extends KoaApplication {
       if (args.length === 0) {
         args[0] = this.options.port || 3123;
         if (args[0] === 3123) {
-          this.logger.info('The application will running at default port: 3123');
+          this.logger.info(
+            'The application will running at default port: 3123',
+          );
         }
       }
 
@@ -158,12 +160,19 @@ class Maius extends KoaApplication {
       });
     });
   }
-
-  public createContext(req, res) {
+  /**
+   * override koa createContext method get context
+   * @param req IncomingMessage
+   * @param res ServerResponse
+   */
+  public createContext(
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+  ): KoaApplication.Context {
     const context = Object.create(this.context);
     this.ctx = context;
-    const request = context.request = Object.create(this.request);
-    const response = context.response = Object.create(this.response);
+    const request = (context.request = Object.create(this.request));
+    const response = (context.response = Object.create(this.response));
     context.app = request.app = response.app = this;
     context.req = request.req = response.req = req;
     context.res = request.res = response.res = res;
