@@ -30,7 +30,20 @@ module.exports = {
       }],
     },
   ],
-  static: { },
+
+  /**
+   * You can set static config by those way below:
+   */
+
+  // static: 'public',
+
+  // static: ['public', 'static'],
+
+  // static: [
+  //   { root: 'public', opts: { defer: true } },
+  //   { root: 'static' },
+  // ],
+
   views: {
     // engine: 'nunjuck',
     // extension: 'html',

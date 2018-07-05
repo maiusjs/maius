@@ -24,6 +24,7 @@ A framework for nodejs
     - [模板引擎](#模板引擎)
         - [支持自定义模板引擎过滤器](#支持自定义模板引擎过滤器)
             - [使用步骤：](#使用步骤)
+    - [资源文件夹](#资源文件夹)
 - [CLI 工具](#cli-工具)
 - [Contribute](#contribute)
     - [本地开发](#本地开发)
@@ -306,6 +307,32 @@ module.exports = {
     <%=helpers.stringLength('maius')%>
    ```
 
+<a id="markdown-资源文件夹" name="资源文件夹"></a>
+### 资源文件夹
+
+Maius 默认将 `public/` 文件夹作为资源文件夹。 你可以在 `config.js` 中增加 static 属性来更改默认配置。
+
+```js
+// config.js
+
+module.exports = {
+  /**
+   * 有三种方式来配置 static 属性
+   */
+
+  // 将 Maius 项目根路径下的 public 作为静态资源文件夹
+  static: 'public',
+
+  // 通过数组可以配置多个静态资源文件夹
+  static: ['public', 'static'],
+
+  // 也可以在数组中传入对象，进行进一步的配置
+  static: [
+    { root: 'public' },
+    { root: 'static', opts: { defer: true } },
+  ],
+};
+```
 
 <a id="markdown-cli-工具" name="cli-工具"></a>
 ## CLI 工具
