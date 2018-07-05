@@ -38,7 +38,7 @@ export default class Static extends BaseMiddleware {
     cfg.name = 'maius:static';
     cfg._couldReorder = true;
 
-    cfg.load = use => use(serve(this.staticPath, this.staticOpts));
+    cfg.load = app => app.use(serve(this.staticPath, this.staticOpts));
 
     const iopts = isObject(opts) ? opts : new ConfigMiddlewareItemModel();
     return this.merge(cfg, iopts);

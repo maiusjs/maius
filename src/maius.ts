@@ -160,11 +160,13 @@ class Maius extends KoaApplication {
       });
     });
   }
+
   /**
    * override koa createContext method get context
    * @param req IncomingMessage
    * @param res ServerResponse
    */
+
   public createContext(
     req: http.IncomingMessage,
     res: http.ServerResponse,
@@ -189,6 +191,7 @@ class Maius extends KoaApplication {
     context.state = {};
     return context;
   }
+
   /**
    * controller loader, and the loader is a single instance.
    *

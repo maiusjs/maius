@@ -8,7 +8,7 @@ import IUserOptions from '../interface/i-user-options';
 import { BaseMiddleware } from '../lib/middleware/base';
 import Maius from '../maius';
 import MdwOptsModel from '../models/mdw-opts-model';
-import { isClass } from '../utils/type';
+import { isClass, isFunction } from '../utils/type';
 import UserConfigLoader from './user-config';
 
 const debug = Debug('maius:middlewareLoader');
@@ -85,7 +85,7 @@ export default class MiddlewareLoader {
 
       // Customize middleware load method
       if ('function' === typeof opts.load) {
-        opts.load(this.maius.use.bind(this.maius));
+        opts.load(this.maius);
 
       // The common way to load middleware.
       } else {
@@ -154,6 +154,10 @@ export default class MiddlewareLoader {
         );
         cfg.name = opts.name;
         cfg.args = opts.args;
+
+        if (isFunction(opts.load)) {
+          cfg.load = opts.load;
+        }
       }
 
       const filename = path.join(this.getMiddlewareDir(), `${cfg.name}.js`);

@@ -3,7 +3,7 @@ import Maius from '../maius';
 export default class MdwOptsModel {
   public args?: any[];
   public name: string;
-  public load?: (use: Maius['use']) => any;
+  public load?: (Maius) => any;
   // tslint:disable-next-line:variable-name
   public _couldReorder?: boolean;
   // tslint:disable-next-line:variable-name
