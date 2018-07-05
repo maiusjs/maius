@@ -14,13 +14,15 @@ export abstract class BaseMiddleware {
   }
 
   /**
-   * @returns MdwOptsModel instance.
+   * Subclass will implement this method. this method return a
+   * MdwOptsModal instance.
    */
 
   public abstract getMiddlewareOpts(opts?: MdwOptsModel): typeof opts;
 
   /**
-   * Combine two Middleware Options Model.
+   * This method is a common utilify function, it used to combine
+   * two MdwOptsModel instance object.
    */
 
   public merge (source: MdwOptsModel, target: typeof source): typeof source {

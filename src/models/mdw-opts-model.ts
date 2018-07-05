@@ -1,5 +1,3 @@
-import Maius from '../maius';
-
 export default class MdwOptsModel {
   public args?: any[];
   public name: string;
