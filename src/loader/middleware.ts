@@ -143,7 +143,7 @@ export default class MiddlewareLoader {
     assert(Array.isArray(middleware), '[config] middleware property must be an array type.');
 
     const optsList = middleware.map((opts, index) => {
-      let cfg = new MdwOptsModel();
+      const cfg = new MdwOptsModel();
 
       if ('string' === typeof opts) {
         cfg.name = opts;
@@ -167,9 +167,9 @@ export default class MiddlewareLoader {
       cfg._filename = fs.existsSync(filename) ? filename : cfg.name;
 
       // Only could set one maius middleware, the others will be remove.
-      if (this.willBeReorderdNames.has(cfg.name)) {
-        cfg = null; // remove this middleware
-      }
+      // if (this.willBeReorderdNames.has(cfg.name)) {
+      //   cfg = null; // remove this middleware
+      // }
 
       if (cfg && this.isSelfMiddlewareByOpts(cfg)) {
         this.willBeReorderdNames.add(cfg.name);
