@@ -11,11 +11,15 @@ const isSomething = (...types: string[]): (arg: any) => boolean => {
 };
 
 export const isFunction = isSomething('Function', 'AsyncFunction');
+
 export const isObject = isSomething('Object');
+
 export const isBoolean = isSomething('Boolean');
 
-export const isClass = (cls: any, name?: string): boolean => {
-  const reg = new RegExp(`^\\s*class\\s+${name ? name + '\\b' : ''}`);
+export const isClass = (arg: any, className?: string): boolean => {
+  if ('function' !== typeof arg) return false;
 
-  return typeof cls === 'function' && reg.test(cls.toString());
+  const reg = new RegExp(`^\\s*class\\s+${className ? className + '\\b' : ''}`);
+
+  return typeof arg === 'function' && reg.test(arg.toString());
 };
