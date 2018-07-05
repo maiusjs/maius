@@ -118,6 +118,10 @@ export default class MiddlewareLoader {
     const middleware: Middleware[] = [];
     const userMdwOpts: MdwOptsModel[] = this.getMiddlewareConfig();
 
+    debug('userMdwOpts: %o', userMdwOpts);
+    debug('selfBeforeMdw: %o', this.selfBeforeMdw);
+    debug('selfAfterMdw: %o', this.selfAfterMdw);
+
     /**
      * Combine users middleware and maius' internal middlware.
      */
@@ -187,6 +191,7 @@ export default class MiddlewareLoader {
 
   private filterBeRordered(arr: MdwOptsModel[]): typeof arr {
     return arr.filter(opts => {
+      debug('filterBeRorderd opts: %o', opts);
       return !this.willBeReorderdNames.has(opts.name);
     });
   }
@@ -246,12 +251,9 @@ export default class MiddlewareLoader {
 
   private requireSelfMiddlewareByName(name: string): BaseMiddleware {
     const rst = /^maius:(.*)$/.exec(name);
-
-    debug('requireSelfMiddleware regexp result: %o', rst);
     assert(rst && rst[1], 'name regexp match error!');
 
     const Mdw = require(path.resolve(__dirname, '../lib/middleware', rst[1])).default;
-
     assert(isClass(Mdw), `Mdw ${rst[1]} is not class`);
 
     const mdw: BaseMiddleware = new Mdw(this.maius);
