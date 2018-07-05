@@ -89,9 +89,10 @@ export default class MiddlewareLoader {
 
       // The common way to load middleware.
       } else {
-        const func = fs.existsSync(opts._filename) ?
-          require(opts._filename) :
-          require(opts.name);
+        // const realPath = fs.existsSync(opts._filename) ? opts._filename : opts.name;
+        // debug('Real path to load: %s', realPath);
+
+        const func = require(opts._filename);
 
         assert(
           typeof func === 'function',
@@ -155,7 +156,11 @@ export default class MiddlewareLoader {
         cfg.args = opts.args;
       }
 
-      cfg._filename = path.join(this.getMiddlewareDir(), `${cfg.name}.js`);
+      const filename = path.join(this.getMiddlewareDir(), `${cfg.name}.js`);
+
+      // const realPath = fs.existsSync(opts._filename) ? opts._filename : opts.name;
+
+      cfg._filename = fs.existsSync(filename) ? filename : cfg.name;
 
       // Only could set one maius middleware, the others will be remove.
       if (this.willBeReorderdNames.has(cfg.name)) {
