@@ -2,7 +2,7 @@
   "name": "maius",
   "version": "0.1.0",
   "description": "A framework for Node.js",
-  "main": "./dev/maius.js",
+  "main": "./dist/maius.js",
   "scripts": {
     "test": "jest",
     "dist": "node_modules/.bin/gulp dist:prd",
