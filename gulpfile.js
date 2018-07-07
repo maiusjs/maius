@@ -1,3 +1,17 @@
+/**
+ * Use Gulp to do the following things:
+ *
+ * Run development demo
+ * - gulp dev
+ *
+ * Build maius resource in development environment
+ * - gulp dist:dev
+ *
+ * Build maius resouces in production environment
+ * - gulp dist:prd
+ *
+ */
+
 const { spawn } = require('child_process');
 const path = require('path');
 const chalk = require('chalk');
@@ -16,7 +30,7 @@ const DEV_DIR = path.resolve('./dev');
  * 编译 ts 文件
  */
 
-gulp.task('compile', () => gulp
+gulp.task('compile:dev', () => gulp
   .src('src/**/*.ts')
   .pipe(sourcemaps.init())
   .pipe(ts(Object.assign(tsconfig.compilerOptions, {
@@ -35,7 +49,7 @@ gulp.task('compile:prd', () => gulp
  * 删除 dist 目录
  */
 
-gulp.task('del', cb => del([DEV_DIR], cb));
+gulp.task('del:dev', cb => del([DEV_DIR], cb));
 
 gulp.task('del:prd', cb => del([DIST_DIR], cb));
 
@@ -43,7 +57,7 @@ gulp.task('del:prd', cb => del([DIST_DIR], cb));
  * 复制 src 文件下的非 .ts 后缀文件到 dist 目录
  */
 
-gulp.task('copy', () => gulp
+gulp.task('copy:dev', () => gulp
   .src(['src/**/*', '!src/**/*.ts', '!src/@types'])
   .pipe(gulp.dest(DEV_DIR)));
 
@@ -86,8 +100,8 @@ gulp.task('server', () => {
  * 3. 将 src 目录下非 ts 后缀文件复制到 dist 目录下
  */
 
-gulp.task('dist', cb => {
-  runSequence('del', ['compile', 'copy'], cb);
+gulp.task('dist:dev', cb => {
+  runSequence('del:dev', ['compile:dev', 'copy:dev'], cb);
 });
 
 gulp.task('dist:prd', cb => {
