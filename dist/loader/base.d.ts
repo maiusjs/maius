@@ -1,12 +1,18 @@
 import BaseContext from '../lib/base-context';
-import FileItemModel from '../models/loader/file-item-model';
+import Maius from '../maius';
 export default abstract class BaseLoader {
     path: string;
-    constructor(options: {
+    maius: Maius;
+    constructor(maius: Maius, options: {
         path?: string;
     });
     getIntancesCol(): {
         [x: string]: BaseContext;
     };
-    protected getFiles(): FileItemModel[];
+    protected getFiles(): {
+        name: string;
+        path: string;
+    }[];
+    private wrapClass;
+    private wrapObject;
 }

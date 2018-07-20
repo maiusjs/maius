@@ -1,11 +1,18 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class BaseContext {
-    bindService(service) {
-        this.service = service;
+    constructor(maius) {
+        this.app = maius;
+        this.ctx = maius.ctx;
     }
-    bindController(controller) {
-        this.controller = controller;
+    get controller() {
+        return this.app.controller;
+    }
+    get service() {
+        return this.app.service;
+    }
+    get httpClient() {
+        return this.app.httpClient;
     }
 }
 exports.default = BaseContext;

@@ -5,7 +5,7 @@ const Debug = require("debug");
 const fs = require("fs");
 const path = require("path");
 const mdw_opts_model_1 = require("../models/mdw-opts-model");
-const index_1 = require("../utils/index");
+const type_1 = require("../utils/type");
 const user_config_1 = require("./user-config");
 const debug = Debug('maius:middlewareLoader');
 const MIDDLEWARE = Symbol('middleware');
@@ -16,6 +16,7 @@ class MiddlewareLoader {
         this.userConfig = user_config_1.default.getIntance().config;
         this.maius = maius;
         this.selfBeforeMdw = [
+            this.makeOneSelfMiddlewareOpts('maius:logger'),
             this.makeOneSelfMiddlewareOpts('maius:static'),
             this.makeOneSelfMiddlewareOpts('maius:views'),
         ];
@@ -29,34 +30,34 @@ class MiddlewareLoader {
             debug('Load one middleware: %o', opts);
             let fn = null;
             if ('function' === typeof opts.load) {
-                opts.load(this.maius.app);
+                opts.load(this.maius);
             }
             else {
-                const func = fs.existsSync(opts._filename) ?
-                    require(opts._filename) :
-                    require(opts.name);
+                const func = require(opts._filename);
                 assert(typeof func === 'function', `middleware ${opts.name} must be an function, but it is ${func}`);
                 fn = func.apply(func, opts.args);
-                this.maius.app.use(fn);
+                this.maius.use(fn);
             }
         });
     }
     getAllMiddlewareOpts() {
         const middleware = [];
         const userMdwOpts = this.getMiddlewareConfig();
+        debug('userMdwOpts: %o', userMdwOpts);
+        debug('selfBeforeMdw: %o', this.selfBeforeMdw);
+        debug('selfAfterMdw: %o', this.selfAfterMdw);
         const combinedMdwOpts = [
             ...this.filterBeRordered(this.selfBeforeMdw),
             ...this.mergeSelfOptsWithUserReorderedOpts(userMdwOpts),
             ...this.filterBeRordered(this.selfAfterMdw),
         ].filter(opts => opts);
-        debug('combinedMiddleware: %O', combinedMdwOpts);
         return combinedMdwOpts;
     }
     getMiddlewareConfig() {
         const middleware = this.userConfig.middleware || [];
         assert(Array.isArray(middleware), '[config] middleware property must be an array type.');
         const optsList = middleware.map((opts, index) => {
-            let cfg = new mdw_opts_model_1.default();
+            const cfg = new mdw_opts_model_1.default();
             if ('string' === typeof opts) {
                 cfg.name = opts;
             }
@@ -64,11 +65,12 @@ class MiddlewareLoader {
                 assert(typeof opts.name === 'string', `[config] middleware[${index}].name need string type value`);
                 cfg.name = opts.name;
                 cfg.args = opts.args;
+                if (type_1.isFunction(opts.load)) {
+                    cfg.load = opts.load;
+                }
             }
-            cfg._filename = path.join(this.getMiddlewareDir(), `${cfg.name}.js`);
-            if (this.willBeReorderdNames.has(cfg.name)) {
-                cfg = null;
-            }
+            const filename = path.join(this.getMiddlewareDir(), `${cfg.name}.js`);
+            cfg._filename = fs.existsSync(filename) ? filename : cfg.name;
             if (cfg && this.isSelfMiddlewareByOpts(cfg)) {
                 this.willBeReorderdNames.add(cfg.name);
             }
@@ -78,6 +80,7 @@ class MiddlewareLoader {
     }
     filterBeRordered(arr) {
         return arr.filter(opts => {
+            debug('filterBeRorderd opts: %o', opts);
             return !this.willBeReorderdNames.has(opts.name);
         });
     }
@@ -101,10 +104,9 @@ class MiddlewareLoader {
     }
     requireSelfMiddlewareByName(name) {
         const rst = /^maius:(.*)$/.exec(name);
-        debug('requireSelfMiddleware regexp result: %o', rst);
         assert(rst && rst[1], 'name regexp match error!');
         const Mdw = require(path.resolve(__dirname, '../lib/middleware', rst[1])).default;
-        assert(index_1.isClass(Mdw), `Mdw ${rst[1]} is not class`);
+        assert(type_1.isClass(Mdw), `Mdw ${rst[1]} is not class`);
         const mdw = new Mdw(this.maius);
         return mdw;
     }

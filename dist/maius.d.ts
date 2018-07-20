@@ -1,14 +1,22 @@
+/// <reference types="koa-router" />
+/// <reference types="koa-views" />
+/// <reference types="node" />
+import * as http from 'http';
+import * as KoaApplication from 'koa';
+import * as log4js from 'log4js';
 import IUserConfig from './interface/i-user-config';
 import IUserOptions from './interface/i-user-options';
-import Application from './lib/application';
 import BaseContext from './lib/base-context';
+import { HttpClient } from './lib/httpclient';
+import Logger from './lib/logger';
 import Router from './lib/router';
-declare class Maius {
+export declare type MaiusContext = KoaApplication.Context;
+declare class Maius extends KoaApplication {
     static Controller: typeof BaseContext;
     static Service: typeof BaseContext;
+    static Logger: typeof Logger;
     options: IUserOptions;
     config: IUserConfig;
-    app: Application;
     router: Router;
     controller: {
         [x: string]: BaseContext;
@@ -16,14 +24,17 @@ declare class Maius {
     service: {
         [x: string]: BaseContext;
     };
-    private middleware;
+    logger: log4js.Logger;
+    httpClient: HttpClient;
+    ctx: KoaApplication.Context;
     constructor(options: IUserOptions);
-    listen(port?: number): Promise<void>;
+    listen(...args: any[]): any;
+    createContext(req: http.IncomingMessage, res: http.ServerResponse): KoaApplication.Context;
     private readonly controllerLoader;
     private readonly serviceLoader;
     private readonly middlewareLoader;
-    private setControllerAndServiceProps;
     private useMiddleware;
     private loadUserRoutes;
+    private errorHandler;
 }
 export default Maius;
