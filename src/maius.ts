@@ -75,14 +75,7 @@ class Maius extends KoaApplication {
      */
     this.config = UserConfigLoader.create(this.options).config;
 
-    this.logger = Logger.create({
-      directory:
-        this.config.logger.directory ||
-        path.resolve(this.options.rootDir + './logs'),
-      level:
-        this.config.logger.level ||
-        (this.config.env === 'dev' ? 'DEBUG' : 'ERROR'),
-    }).getlogger();
+    this.logger = Logger.create(this.config.logger).getlogger();
 
     /**
      * Koa appliction instance

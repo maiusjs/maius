@@ -66,6 +66,14 @@ Please call UserConfigLoader.getInstance() to get instance.`);
     if (!config.env) {
       config.env = process.env.MAIUS_ENV || process.env.NODE_ENV || 'dev';
     }
+
+    config.logger = Object.assign(
+      {
+        directory: path.resolve(this.options.rootDir, './logs'),
+        level: config.env === 'dev' ? 'DEBUG' : 'ERROR',
+      },
+      config.logger || {});
+
     debug('User config: %o', config);
 
     return config;
