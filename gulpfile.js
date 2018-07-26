@@ -113,7 +113,7 @@ gulp.task('dist:prd', cb => {
  */
 
 gulp.task('server.restart', cb => {
-  runSequence('dist', 'server', cb);
+  runSequence('dist:dev', 'server', cb);
 });
 
 /**
