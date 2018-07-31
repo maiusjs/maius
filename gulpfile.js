@@ -27,6 +27,12 @@ const DIST_DIR = tsconfig.compilerOptions.outDir || path.resolve('./dist');
 const DEV_DIR = path.resolve('./dev');
 
 /**
+ * Run development demo
+ */
+
+gulp.task('dev', ['watch', 'demo.watch']);
+
+/**
  * 编译 ts 文件
  */
 
@@ -128,4 +134,3 @@ const wat = gulp.task('watch', ['server.restart'], () => gulp.watch('src/**/*', 
 
 gulp.task('demo.watch', [], () => gulp.watch('demo/**/*.js', ['server']));
 
-gulp.task('dev', ['watch', 'demo.watch']);

@@ -8,6 +8,7 @@
   "rules": {
     "ter-arrow-parens": [true, "as-needed"],
     "import-name": false,
+    "prefer-for-of": false,
     "variable-name": [
       true,
       "allow-pascal-case"

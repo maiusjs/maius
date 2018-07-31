@@ -43,15 +43,6 @@ module.exports = {
   //   { root: 'public', opts: { defer: true } },
   //   { root: 'static' },
   // ],
-
-  views: {
-    // engine: 'nunjuck',
-    // extension: 'html',
-    // dir: '',
-    // option: {
-    //   option: {  },
-    // },
-  },
 };
 
 module.exports.logger = {

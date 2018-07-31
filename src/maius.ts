@@ -68,6 +68,13 @@ class Maius extends KoaApplication {
     this.options = options;
 
     /**
+     * user options
+     *
+     * @since 0.1.0
+     */
+    this.options = options;
+
+    /**
      * UserConfigLoader is a single instance class. And the instance will be
      * created here.
      *

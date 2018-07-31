@@ -1,3 +1,5 @@
+process.env.NODE_ENV = 'development';
+
 const Maius = require('../dev/maius');
 
 const app = new Maius({

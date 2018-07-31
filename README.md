@@ -4,27 +4,18 @@
 
 A framework for nodejs
 
-<a id="markdown-目录" name="目录"></a>
-## 目录
+<!-- TOC depthFrom:2 depthTo:3 -->
 
-<!-- TOC depthFrom:2 -->
-
-- [目录](#目录)
 - [使用](#使用)
     - [项目结构](#项目结构)
     - [app.js 入口](#appjs-入口)
+    - [config 配置](#config-配置)
     - [router.js 路由](#routerjs-路由)
     - [controller 控制器](#controller-控制器)
     - [service 服务](#service-服务)
     - [middleware 中间件](#middleware-中间件)
-        - [自定义一个中间件](#自定义一个中间件)
-            - [1. 在 `middleware/` 文件夹下创建自定义中间件](#1-在-middleware-文件夹下创建自定义中间件)
-            - [2. 加载中间件](#2-加载中间件)
-        - [使用 npm 现有的中间件](#使用-npm-现有的中间件)
-    - [模板引擎](#模板引擎)
-        - [支持自定义模板引擎过滤器](#支持自定义模板引擎过滤器)
-            - [使用步骤：](#使用步骤)
-    - [资源文件夹](#资源文件夹)
+    - [views 模板引擎](#views-模板引擎)
+    - [public 资源文件夹](#public-资源文件夹)
 - [CLI 工具](#cli-工具)
 - [Contribute](#contribute)
     - [本地开发](#本地开发)
@@ -40,6 +31,7 @@ A framework for nodejs
 
 ```
 .
+├── config      # maius 配置目录
 ├── controller  # 控制器目录
 ├── service     # 服务层目录
 ├── middleware  # 中间件目录
@@ -47,7 +39,6 @@ A framework for nodejs
 ├── views       # 视图模板目录
 |
 ├── app.js      # 项目入口
-├── config.js   # maius 配置文件
 └── router.js   # 路由
 ```
 
@@ -67,6 +58,55 @@ const app = new Maius({
 app.listen().then(() => {
   console.log('http://localhost:3123');
 });
+```
+
+<a id="markdown-config-配置" name="config-配置"></a>
+### config 配置
+
+maius 有着灵活的配置方法
+
+在 `config/config.js` 文件:
+
+```js
+// config/config.js
+
+module.exports = {
+  viewEngine: {
+    extension: 'ejs',
+    viewsDir: 'views',
+    engine: 'ejs',
+  },
+}
+```
+
+或者在 `config/viewEngine.js` 下：
+
+```js
+// config/viewEngine.js
+
+module.exports = {
+  extension: 'ejs',
+  viewsDir: 'views',
+  engine: 'ejs',
+}
+```
+两种写法完全是等价的，且后者生效的优先级高于前者。
+
+#### 不同环境下的配置
+
+你可以在 `config/env/${env}.js` 下对不同环境的配置进行重写
+
+```js
+// config/env/producion.js
+// 当 NODE_ENV === 'production' 时，production.js 会重写当前配置
+
+module.exports = {
+  viewEngine: {
+    extension: 'html',
+    viewsDir: 'views',
+    engine: 'ejs',
+  },
+}
 ```
 
 <a id="markdown-routerjs-路由" name="routerjs-路由"></a>
@@ -185,10 +225,8 @@ module.exports = class HomeController extends Controller {
 
 Maius 也是基于 Koa 的洋葱模型来实现中间件的，同时也完美兼容 Koa 的中间件。
 
-<a id="markdown-自定义一个中间件" name="自定义一个中间件"></a>
 #### 自定义一个中间件
 
-<a id="markdown-1-在-middleware-文件夹下创建自定义中间件" name="1-在-middleware-文件夹下创建自定义中间件"></a>
 ##### 1. 在 `middleware/` 文件夹下创建自定义中间件
 
 下面我们来实现一个简单的 log 中间件，用于展示程序处理每次请求所消耗的时间：
@@ -212,7 +250,6 @@ module.exports = options => async (ctx, next) => {
 };
 ```
 
-<a id="markdown-2-加载中间件" name="2-加载中间件"></a>
 ##### 2. 加载中间件
 
 在 `config.js` 文件中配置中间件加载的位置以及相关参数。
@@ -251,7 +288,6 @@ module.exports = {
 
 至此，log 中间件就算是大功告成了。
 
-<a id="markdown-使用-npm-现有的中间件" name="使用-npm-现有的中间件"></a>
 #### 使用 npm 现有的中间件
 
 下面使用 `koa-bodyparser` 中间件来举例
@@ -268,8 +304,8 @@ module.exports = {
 };
 ```
 
-<a id="markdown-模板引擎" name="模板引擎"></a>
-### 模板引擎
+<a id="markdown-views-模板引擎" name="views-模板引擎"></a>
+### views 模板引擎
 
 ```js
 // config.js
@@ -290,10 +326,8 @@ module.exports = {
 
 ```
 
-<a id="markdown-支持自定义模板引擎过滤器" name="支持自定义模板引擎过滤器"></a>
 #### 支持自定义模板引擎过滤器
 
-<a id="markdown-使用步骤" name="使用步骤"></a>
 ##### 使用步骤：
 
 1. 项目目录下新建`extend`文件夹
@@ -307,8 +341,8 @@ module.exports = {
     <%=helpers.stringLength('maius')%>
    ```
 
-<a id="markdown-资源文件夹" name="资源文件夹"></a>
-### 资源文件夹
+<a id="markdown-public-资源文件夹" name="public-资源文件夹"></a>
+### public 资源文件夹
 
 Maius 默认将 `public/` 文件夹作为资源文件夹。 你可以在 `config.js` 中增加 static 属性来更改默认配置。
 
