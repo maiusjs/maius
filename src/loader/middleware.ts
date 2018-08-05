@@ -75,7 +75,7 @@ export default class MiddlewareLoader {
   }
 
   /**
-   * to use all middleware one by one
+   * use all middleware one by one
    */
 
   public useAllMiddleware(): void {

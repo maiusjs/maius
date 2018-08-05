@@ -72,7 +72,7 @@ export default abstract class BaseLoader {
    * @since 0.1.0
    */
 
-  protected getFiles(): { name: string, path: string }[] {
+  private getFiles(): { name: string, path: string }[] {
     const dir = this.path;
     let list: string[] = null;
 

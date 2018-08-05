@@ -21,8 +21,6 @@
         - middleware
         - config
         - extend (application, context, response, request)
-- [ ] MAIUS_ENV NODE_ENV
-
 
 - [ ] demo 和 core 分离. (待项目core 部分稳定后再开展)
 - [ ] Error Handling.
