@@ -7,4 +7,4 @@ test.js
 
 # maius development dist directory
 dev
-demo/logs
+demo/**/logs

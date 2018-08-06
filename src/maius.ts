@@ -82,7 +82,7 @@ class Maius extends KoaApplication {
      */
     this.config = UserConfigLoader.create(this.options).config;
 
-    this.logger = Logger.create(this.config.logger).getlogger();
+    this.logger = Logger.create(this.config.logger, this.options).getlogger();
 
     /**
      * Koa appliction instance

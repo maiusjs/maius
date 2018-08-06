@@ -46,6 +46,6 @@ module.exports = {
 };
 
 module.exports.logger = {
-  directory: __dirname + '/logs',
+  directory: __dirname + '/../logs',
   level: 'DEBUG',
 };

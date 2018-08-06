@@ -1,16 +1,18 @@
 import * as log4js from 'log4js';
+import * as path from 'path';
 import { ILoggerConfig } from '../interface/i-user-config';
+import IUserOptions from '../interface/i-user-options';
 
 export default class Logger {
 
   public static instance: Logger;
   public static levels = log4js.levels;
 
-  public static create(config: ILoggerConfig): Logger {
+  public static create(config: ILoggerConfig, options: IUserOptions): Logger {
     if (Logger.instance) {
       return Logger.instance;
     }
-    Logger.instance = new Logger(config);
+    Logger.instance = new Logger(config, options);
     return Logger.instance;
   }
 
@@ -18,10 +20,10 @@ export default class Logger {
     return Logger.instance;
   }
 
-  constructor(config: ILoggerConfig) {
+  constructor(config: ILoggerConfig, options: IUserOptions) {
 
     config.level = config.level || 'DEBUG';
-    config.directory = config.directory || './';
+    config.directory = config.directory || path.resolve(options.rootDir);
 
     const defAppenders = [];
     if ((config.level === 'DEBUG' && typeof config.stdout === 'undefined') ||
@@ -33,18 +35,18 @@ export default class Logger {
       appenders: {
         access: {
           category: 'http',
-          filename: config.directory + '/access.log',
+          filename: path.join(config.directory, '/access.log'),
           pattern: '-yyyy-MM-dd',
           type: 'dateFile',
         },
         app: {
-          filename: config.directory + '/app.log',
+          filename: path.join(config.directory, '/app.log'),
           maxLogSize: 1048 * 1048,
           numBackups: 5,
           type: 'file',
         },
         errorFile: {
-          filename:  config.directory + '/errors.log',
+          filename:  path.join(config.directory, '/errors.log'),
           type: 'file',
         },
         errors: {
