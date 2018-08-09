@@ -1,5 +1,5 @@
-import { BaseMiddleware } from '../../../src/lib/middleware/base';
-import MdwOptsModel from '../../../src/models/mdw-opts-model';
+import { BaseMiddleware } from '../../../../src/lib/middleware/base';
+import MdwOptsModel from '../../../../src/models/mdw-opts-model';
 
 describe('/test/base.test.ts', () => {
 

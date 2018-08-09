@@ -1,7 +1,7 @@
 // import {Maius} from '../src/maius';
 // const Maius = require('../src/maius');
 
-import Maius from '../src/maius';
+import Maius from '../../src/maius';
 
 describe('/test/maius.test.ts', () => {
 
