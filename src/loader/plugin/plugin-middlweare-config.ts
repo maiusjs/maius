@@ -7,22 +7,53 @@ export interface IMiddlewareConfig {
   disabled?: boolean;
 }
 
-export default class PluginMiddlewareFolderLoader {
-  public middlewareList: IMiddlewareConfig[];
-  private config: object;
+/**
+ * Get the safety middleware config array.
+ */
+export default class PluginMiddlewareConfigLoader {
+  public middlewareConfigList: IMiddlewareConfig[];
+  private config: IMiddlewareConfig[];
 
   /**
-   * Create middleware folder loader of one folder.
+   * Create middleware config loader.
    *
    * @param dirname - middleware directory path
-   * @param config - all middlware config obj
+   * @param config - middlware config array
    * @param app - the instance of maius
    */
-  constructor(config: object, app: Maius) {
+  constructor(config: IMiddlewareConfig[], app: Maius) {
+    /**
+     * @private
+     */
     this.config = config;
-    this.middlewareList = [];
 
-    this.handleMiddlewareCol();
+    /**
+     * A middleware config list, only contain safety config.
+     * @since 0.1.0
+     */
+    this.middlewareConfigList = [];
+
+    this.handleMiddlewareConfig();
+  }
+
+  /**
+   * Push middleware into this.middleware in order, without
+   * the middlware that the property enable is false.
+   */
+  private handleMiddlewareConfig() {
+
+    for (let i = 0; i < this.config.length; i += 1) {
+      const item = this.config[i];
+
+      // check is it safety.
+      if (!this.checkSafe(item, i)) continue;
+
+      // this middleware had disabled
+      if (item.disabled) return;
+
+      // push item into this.middleware
+      this.proxyPushItem(item);
+    }
   }
 
   /**
@@ -34,38 +65,17 @@ export default class PluginMiddlewareFolderLoader {
    * @param item - one middleware config
    */
   private proxyPushItem(item) {
-    for (let i = 0; i < this.middlewareList.length; i += 1) {
-      const middlewareConfig = this.middlewareList[i];
+    for (let i = 0; i < this.middlewareConfigList.length; i += 1) {
+      const middlewareConfig = this.middlewareConfigList[i];
 
       // the latter will replace the former.
       if (middlewareConfig.name === item.name) {
-        this.middlewareList.splice(i, 1, item);
+        this.middlewareConfigList.splice(i, 1, item);
         return;
       }
     }
 
-    this.middlewareList.push(item);
-  }
-
-  /**
-   * Push middleware into this.middleware in order, without
-   * the middlware that the property enable is false.
-   */
-  private handleMiddlewareCol() {
-    const keys = Object.keys(this.config);
-
-    for (let i = 0; i < keys.length; i += 1) {
-      const item = this.config[keys[i]];
-
-      // check is it safety.
-      if (!this.checkSafe(item, i)) continue;
-
-      // this middleware had disabled
-      if (item.disabled) return;
-
-      // push item into this.middleware
-      this.proxyPushItem(item);
-    }
+    this.middlewareConfigList.push(item);
   }
 
   /**
