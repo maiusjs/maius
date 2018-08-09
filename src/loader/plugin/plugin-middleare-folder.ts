@@ -7,7 +7,7 @@ export interface IMiddlewareConfig {
   disabled?: boolean;
 }
 
-export default class MiddlewareFolderLoader {
+export default class PluginMiddlewareFolderLoader {
   public middlewareList: IMiddlewareConfig[];
   private config: object;
 
