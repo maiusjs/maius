@@ -4,9 +4,10 @@
   "description": "A framework for Node.js",
   "main": "./dist/maius.js",
   "scripts": {
-    "test": "jest",
+    "test": "jest --coverage",
     "dist": "node_modules/.bin/gulp dist:prd",
     "dev": "DEBUG=maius:* node_modules/.bin/gulp dev",
+    "dev:plugin": "DEBUG=maius:Plugin* node_modules/.bin/gulp dev",
     "preversion": "npm run dist",
     "version": "npm run dist && git add --all dist",
     "postversion": "npm publish"
@@ -34,6 +35,7 @@
     "is-generator-function": "^1.0.7",
     "kcors": "^2.2.1",
     "koa": "^2.5.1",
+    "koa-bodyparser": "^4.2.1",
     "koa-convert": "^1.2.0",
     "koa-morgan": "^1.0.1",
     "koa-router": "^7.4.0",
@@ -75,11 +77,13 @@
     "typescript": "^2.9.1"
   },
   "jest": {
+    "coverageDirectory": "./test/coverage/",
     "transform": {
       "^.+\\.tsx?$": "ts-jest"
     },
     "testURL": "http://localhost/",
-    "testRegex": "(/test/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "testRegex": "\\.test.ts$",
+
     "moduleFileExtensions": [
       "ts",
       "tsx",
