@@ -1,15 +1,22 @@
 import * as path from 'path';
-import PluginConfigLoader from '../../../../src/loader/plugin/plugin-config';
 import PluginMiddlewareConfigLoader from '../../../../src/loader/plugin/plugin-middlweare-config';
 
 describe('PluginMiddlewareConfigLoader', () => {
 
   test('filter unsafe middleware config', () => {
-    const project = path.resolve(__dirname, '../../../mock/plugins/plugin-unsafe-mdw-config');
+    const unsafeMiddleware  = [
+      {
+        args: 'unsafe',
+        name: 'mdw1',
+      },
+      {
+        args: ['arg'],
+        name: 'mdw2',
+      },
+    ];
 
-    const pluginConfigLoader = new PluginConfigLoader(path.join(project, 'config'));
     const pluginMiddlewareConfigLoader =
-      new PluginMiddlewareConfigLoader(pluginConfigLoader.config.middleware);
+      new PluginMiddlewareConfigLoader(unsafeMiddleware as any);
 
     const list = pluginMiddlewareConfigLoader.middlewareConfigList;
 
@@ -19,11 +26,18 @@ describe('PluginMiddlewareConfigLoader', () => {
   });
 
   test('normal middleware config', () => {
-    const project = path.resolve(__dirname, '../../../mock/plugins/plugin-mock/');
+    const middleware = [
+      {
+        name: 'mock-plugin1',
+      },
+      {
+        args: ['argument'],
+        name: 'mock-plugin2',
+      },
+    ];
 
-    const pluginConfigLoader = new PluginConfigLoader(path.join(project, 'config'));
     const pluginMiddlewareConfigLoader =
-      new PluginMiddlewareConfigLoader(pluginConfigLoader.config.middleware);
+      new PluginMiddlewareConfigLoader(middleware);
 
     const list = pluginMiddlewareConfigLoader.middlewareConfigList;
 
