@@ -2,8 +2,9 @@
 node_modules
 npm-debug.log
 
-# test script in local
-test.js
+# test coverage
+test/coverage
+
 
 # maius development dist directory
 dev
