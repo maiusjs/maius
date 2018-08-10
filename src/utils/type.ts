@@ -10,11 +10,14 @@ const isSomething = (...types: string[]): (arg: any) => boolean => {
   };
 };
 
-export const isFunction = isSomething('Function', 'AsyncFunction');
-
 export const isObject = isSomething('Object');
 
 export const isBoolean = isSomething('Boolean');
+
+// export const isFunction = isSomething('Function', 'AsyncFunction');
+export const isFunction = (arg: any) => {
+  return 'function' === typeof arg;
+};
 
 export const isClass = (arg: any, className?: string): boolean => {
   if ('function' !== typeof arg) return false;
