@@ -18,6 +18,10 @@ const log: {
  * Could get merged config of the plugin by config property of the instance.
  */
 export default class PluginConfigLoader {
+  /**
+   * The merged config
+   * @since 0.1.0
+   */
   public config: any;
 
   /**
@@ -26,11 +30,6 @@ export default class PluginConfigLoader {
    * @param dirname The config directory path in the plugin.
    */
   constructor(dirname: string) {
-
-    /**
-     * The merged config
-     * @since 0.1.0
-     */
     this.config = this.mergeMultiUserConfig(dirname);
   }
 

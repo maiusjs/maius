@@ -6,25 +6,30 @@ import { isFunction } from '../../utils/type';
 
 const debug = Debug('maius:PluginMiddlewareLoader');
 
-/**
- * Get all middleware fn, and filtered illegal middleware
- */
+export interface IMiddlewareCol {
+  [x: string]: Middleware;
+}
+
 export default class PluginMiddlewareLoader {
-  public middlewareCol: { [x: string]: Middleware };
+  public middlewareCol: IMiddlewareCol;
 
   /**
+   * Get all middleware fn, and filtered illegal middleware, by `this.middlewareCol`
+   *
    * @param dirname the middleware directory path.
    */
   constructor(dirname: string) {
+    /**
+     * @since 0.1.0
+     */
     this.middlewareCol = this.collectMiddleware(dirname);
   }
 
   /**
-   *
    * @param dirname the middleware directory
    * @return
    */
-  private collectMiddleware(dirname: string): { [x: string]: Middleware } {
+  private collectMiddleware(dirname: string): IMiddlewareCol {
     const middlewareCol = {};
     let fileList: string[] = null;
 

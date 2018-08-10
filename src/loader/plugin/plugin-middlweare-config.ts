@@ -7,30 +7,22 @@ export interface IMiddlewareConfig {
   disabled?: boolean;
 }
 
-/**
- * Get the safety middleware config array.
- */
 export default class PluginMiddlewareConfigLoader {
+
+  /**
+   * A middleware config list, only contain safety config.
+   * @since 0.1.0
+   */
   public middlewareConfigList: IMiddlewareConfig[];
   private config: IMiddlewareConfig[];
 
   /**
-   * Create middleware config loader.
+   * Get the safety middleware config array by `this.middlewareConfigList`
    *
-   * @param dirname - middleware directory path
    * @param config - middlware config array
-   * @param app - the instance of maius
    */
-  constructor(config: IMiddlewareConfig[], app: Maius) {
-    /**
-     * @private
-     */
+  constructor(config: IMiddlewareConfig[]) {
     this.config = config;
-
-    /**
-     * A middleware config list, only contain safety config.
-     * @since 0.1.0
-     */
     this.middlewareConfigList = [];
 
     this.handleMiddlewareConfig();
@@ -90,20 +82,20 @@ export default class PluginMiddlewareConfigLoader {
     const { name, args, disabled } = config;
 
     if ('string' !== typeof name) {
-      console.warn(`Expected config.middleware[${index}].name is a string or function,
-  but accept ${typeof name}`);
+      console.warn(`Expect config.middleware[${index}].name is a string or function,\
+but accept ${typeof name}.`);
       return false;
     }
 
     if (args && !Array.isArray(args)) {
-      console.warn(`Expected config.middleware[${index}].args is an array,
-  but accept ${typeof name}`);
+      console.warn(`Expect config.middleware[${index}].args is an array,\
+but accept ${typeof name}.`);
       return false;
     }
 
     if (disabled !== undefined && 'boolean' !== typeof disabled) {
-      console.warn(`Expected config.middleware[${index}].disabled is a boolean,
-  but accept ${typeof name}`);
+      console.warn(`Expect config.middleware[${index}].disabled is a boolean,\
+but accept ${typeof name}.`);
       return false;
     }
 
