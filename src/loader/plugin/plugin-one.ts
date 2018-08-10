@@ -3,7 +3,6 @@ import * as fs from 'fs';
 import { Middleware } from 'koa';
 import * as path from 'path';
 import Maius from '../../maius';
-import { IMiddleware } from '../../plugin/router/lib/router';
 import callClassOrFn from '../../utils/callClassOrFn';
 import { isFunction } from '../../utils/type';
 import PluginConfigLoader from './plugin-config';
@@ -77,7 +76,7 @@ export default class PluginOneLoader {
     if (Array.isArray(this.config.middleware)) {
       // middleware config loader
       this.pluginMiddlewareConfigLoader =
-        new PluginMiddlewareConfigLoader(this.config.middleware as IMiddleware[]);
+        new PluginMiddlewareConfigLoader(this.config.middleware as Middleware[]);
 
       // filtered middleware config list
       this.middlewareConfigList = this.pluginMiddlewareConfigLoader.middlewareConfigList;
