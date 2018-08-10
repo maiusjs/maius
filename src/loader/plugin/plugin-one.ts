@@ -1,3 +1,4 @@
+import * as Debug from 'debug';
 import * as fs from 'fs';
 import { Middleware } from 'koa';
 import * as path from 'path';
@@ -8,6 +9,8 @@ import { isFunction } from '../../utils/type';
 import PluginConfigLoader from './plugin-config';
 import PluginMiddlewareLoader from './plugin-middleware';
 import PluginMiddlewareConfigLoader, { IMiddlewareConfig } from './plugin-middlweare-config';
+
+const debug = Debug('maius:PluginOneLoader');
 
 export default class PluginOneLoader {
 
@@ -119,6 +122,7 @@ export default class PluginOneLoader {
     if (!this.middlewareConfigList) return;
 
     const middlewareCol = this.pluginMiddlewareLoader.middlewareCol;
+    const execFnList: string[] = [];
 
     for (let i = 0; i < this.middlewareConfigList.length; i += 1) {
       const itemConfig: IMiddlewareConfig = this.middlewareConfigList[i];
@@ -128,6 +132,7 @@ export default class PluginOneLoader {
       // name as Middleware
       if (isFunction(name)) {
         mdw = name as Middleware;
+        execFnList.push('[Function]');
 
       // name as string
       } else if ('string' === typeof name) {
@@ -139,6 +144,7 @@ export default class PluginOneLoader {
         }
 
         mdw = middlewareCol[name];
+        execFnList.push(name);
       } else {
         continue;
       }
@@ -147,5 +153,7 @@ export default class PluginOneLoader {
       // use the middlware
       this.app.use(mdw.apply(null, [...args, this.app]));
     }
+
+    debug('dirname: %o, middleware list: %o', this.dirname, execFnList);
   }
 }

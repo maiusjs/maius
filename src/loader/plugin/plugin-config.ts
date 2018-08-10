@@ -4,7 +4,7 @@ import merge = require('lodash.merge');
 import * as path from 'path';
 import { isObject } from '../../utils/type';
 
-const debug = Debug('maius:PluginConfig');
+const debug = Debug('maius:PluginConfigLoader');
 
 const log: {
   loadFileError: (filename: string, error: Error) => void;
@@ -15,7 +15,7 @@ const log: {
 };
 
 /**
- * Could get merged config of the plugin by config property of the instance.
+ * Could get merged config of the `plugin/config/` by this.config.
  */
 export default class PluginConfigLoader {
   /**
@@ -25,7 +25,7 @@ export default class PluginConfigLoader {
   public config: any;
 
   /**
-   * Create a plugin config loader
+   * Could get merged config of the `plugin/config/` by this.config.
    *
    * @param dirname The config directory path in the plugin.
    */

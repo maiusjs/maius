@@ -10,6 +10,9 @@ export interface IMiddlewareCol {
   [x: string]: Middleware;
 }
 
+/**
+ * Get all middleware fn, and filtered illegal middleware, by `this.middlewareCol`
+ */
 export default class PluginMiddlewareLoader {
   public middlewareCol: IMiddlewareCol;
 
