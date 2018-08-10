@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import { Middleware } from 'koa';
 import * as path from 'path';
 import Maius from '../../maius';
@@ -7,7 +8,6 @@ import { isFunction } from '../../utils/type';
 import PluginConfigLoader from './plugin-config';
 import PluginMiddlewareLoader from './plugin-middleware';
 import PluginMiddlewareConfigLoader, { IMiddlewareConfig } from './plugin-middlweare-config';
-import * as fs from 'fs';
 
 export default class PluginOneLoader {
 
@@ -58,20 +58,27 @@ export default class PluginOneLoader {
       middleware: path.join(this.dirname, 'middleware'),
     };
 
-    this.pluginConfigLoader = new PluginConfigLoader(this.directory.config);
+    // load plugin config
+    if (fs.existsSync(path.join(this.directory.config))) {
+      this.pluginConfigLoader = new PluginConfigLoader(this.directory.config);
+      this.config = this.pluginConfigLoader.config;
+    } else {
+      this.config = {};
+    }
 
-    // plugin config object.
-    this.config = this.pluginConfigLoader.config;
+    if (fs.existsSync(path.join(this.directory.middleware))) {
+      // middleware function loader
+      this.pluginMiddlewareLoader = new PluginMiddlewareLoader(this.directory.middleware);
+    }
 
-    // middleware function loader
-    this.pluginMiddlewareLoader = new PluginMiddlewareLoader(this.directory.middleware);
+    if (Array.isArray(this.config.middleware)) {
+      // middleware config loader
+      this.pluginMiddlewareConfigLoader =
+        new PluginMiddlewareConfigLoader(this.config.middleware as IMiddleware[]);
 
-    // middleware config loader
-    this.pluginMiddlewareConfigLoader =
-      new PluginMiddlewareConfigLoader(this.config.middleware as IMiddleware[]);
-
-    // filtered middleware config list
-    this.middlewareConfigList = this.pluginMiddlewareConfigLoader.middlewareConfigList;
+      // filtered middleware config list
+      this.middlewareConfigList = this.pluginMiddlewareConfigLoader.middlewareConfigList;
+    }
 
     // call the entry file
     this.callEntry();
@@ -89,7 +96,7 @@ export default class PluginOneLoader {
     if (fs.existsSync(path.join(this.dirname, 'plugin.ts'))) {
       pluginPath = path.join(this.dirname, 'plugin.ts');
     } else if (fs.existsSync(path.join(this.dirname, 'plugin.js'))) {
-      pluginPath = path.join(this.dirname, 'plugin.ts');
+      pluginPath = path.join(this.dirname, 'plugin.js');
     } else {
       console.log('no plugin entry');
       return;
@@ -108,6 +115,9 @@ export default class PluginOneLoader {
    * use all middleware.
    */
   private useMiddleware() {
+    if (!this.pluginMiddlewareLoader) return;
+    if (!this.middlewareConfigList) return;
+
     const middlewareCol = this.pluginMiddlewareLoader.middlewareCol;
 
     for (let i = 0; i < this.middlewareConfigList.length; i += 1) {
