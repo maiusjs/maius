@@ -1,7 +1,6 @@
-module.exports = (options, app) => async (ctx, next) => {
-  console.log('dddeeemmmooo in');
-  console.log(options);
-  console.log(app);
+module.exports = (options, app, pluginConfig) => async (ctx, next) => {
+  console.log('external in');
+  console.log('plugin config', pluginConfig);
   await next()
-  console.log('dddeeemmmooo out');
+  console.log('external out');
 };

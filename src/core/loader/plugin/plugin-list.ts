@@ -1,43 +1,46 @@
 import * as Debug from 'debug';
 import * as fs from 'fs';
 import * as path from 'path';
-import Maius from '../../maius';
-import PluginOneLoader from './plugin-one';
+import Maius from '../../../maius';
+import PluginOneLoader, { IPluginConfig } from './plugin-one';
 
-const debug = Debug('maius:PluginLoader');
+const debug = Debug('maius:PluginListLoader');
 
-export default class PluginLoader {
+export interface IPluginItem {
+  dirname: string;
+  config: IPluginConfig;
+  module?: boolean; // is it npm package
+}
+
+export default class PluginListLoader {
   /**
    * The config merged by all plugins config.
    */
-  public mergedConfig: object;
+  public appConfig: object;
 
   private app: Maius;
-  private dirnameList: string[];
+  private pluginList: IPluginItem[];
 
   /**
    * Create a pluginLoader
    *
    * @param app - The instance of Maius program.
-   * @param dirnameList - an array contained the absolute path of the mutli plugin directory.
+   * @param pluginList - an array of IPluginItem.
    */
-  constructor(app: Maius, dirnameList: string[]) {
+  constructor(app: Maius, pluginList: IPluginItem[]) {
     this.app = app;
-    this.dirnameList = dirnameList;
-    this.mergedConfig = {};
+    this.pluginList = pluginList;
+    this.appConfig = {};
 
-    debug('dirname list: %o', dirnameList);
-
-    this.loadAllPlugin();
+    debug('Got plugin list will to load: %o', pluginList);
   }
 
   /**
    * load all plugin from this.dirnameList
    */
-  private loadAllPlugin() {
-    for (let i = 0; i < this.dirnameList.length; i += 1) {
-      const dirname = this.dirnameList[i];
-      console.log('555', dirname, i, this.dirnameList.length);
+  public load() {
+    for (let i = 0; i < this.pluginList.length; i += 1) {
+      const { dirname, config } = this.pluginList[i];
 
       // check is safe
       if (!path.isAbsolute(dirname)) {
@@ -56,10 +59,9 @@ export default class PluginLoader {
         continue;
       }
 
-      console.log('plugin one:', dirname);
       // load one plugin
       try {
-        const pluginOneLoader = new PluginOneLoader(dirname, this.app);
+        const pluginOneLoader = new PluginOneLoader(this.app, dirname, config);
       } catch (error) {
         console.log(error);
       }

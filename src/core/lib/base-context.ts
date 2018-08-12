@@ -1,4 +1,4 @@
-import Maius, { MaiusContext } from '../maius';
+import Maius, { MaiusContext } from '../../maius';
 
 export default class BaseContext {
   public baseConstructor: typeof BaseContext;

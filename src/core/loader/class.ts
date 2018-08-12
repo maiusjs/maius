@@ -2,31 +2,24 @@ import * as assert from 'assert';
 import * as Debug from 'debug';
 import * as fs from 'fs';
 import * as path from 'path';
+import Maius from '../../maius';
 import BaseContext from '../lib/base-context';
-import Maius from '../maius';
 import { isFunction, isObject } from '../utils/type';
 
 const debug = Debug('maius:baseLoader');
 
-/**
- * ServiceLoader and ControllerLoader will extends from BaseLoader.
- *
- * this.getIntancesCol() this a common method for ServiceLoader and
- * ControllerLoader.
- *
- * @class
- */
-
-export default abstract class BaseLoader {
+export default abstract class ClassLoader {
   public path: string;
   public maius: Maius;
 
   /**
-   * @constructor
-   * @param options      loader options
+   * ServiceLoader and ControllerLoader will extends from BaseLoader.
+   *
+   * this.getIntancesCol() this a common method for ServiceLoader and
+   * ControllerLoader.
+   *
    * @param options.path user's target directory path
    */
-
   constructor(maius: Maius, options: { path?: string }) {
     assert(options.path, 'options.path cannot be ignored');
     this.path = options.path;
@@ -34,21 +27,17 @@ export default abstract class BaseLoader {
   }
 
   /**
-   * @returns 实例化 options.path 下各个文件的类，并根据其文件名组成一个新的对象。
-   * { [filename]: classInstance }
+   * 实例化 options.path 下各个文件的类，并根据其文件名组成一个新的对象。
    *
+   * @returns key 为文件名，value 为实例所组成的一个新对象 { [filename]: classInstance }
    * @since 0.1.0
    */
 
   public getIntancesCol(): { [x: string]: BaseContext } {
     const col: any = Object.create({});
 
-    this.getFiles().forEach(item => {
-      debug('Loading file: %o', item);
-
+    this.getFiles(this.path).forEach(item => {
       const UserClass = require(item.path);
-
-      debug('file export: %o', UserClass);
 
       if (isFunction(UserClass)) {
         col[item.name] = this.wrapClass(UserClass);
@@ -66,14 +55,13 @@ export default abstract class BaseLoader {
   }
 
   /**
-   * @returns 根据 options.path 读取文件夹下的文件，并返回相关文件信息列表
+   * 读取文件夹下的文件，并返回相关文件信息列表
    *
-   * @private
-   * @since 0.1.0
+   * @param dir the diretory to scan
+   * @return info about files in the target directory.
    */
 
-  private getFiles(): { name: string, path: string }[] {
-    const dir = this.path;
+  private getFiles(dir: string): { name: string, path: string }[] {
     let list: string[] = null;
 
     try {
@@ -112,15 +100,13 @@ export default abstract class BaseLoader {
     while (proto !== Object.prototype) {
       const keys = Object.getOwnPropertyNames(proto);
 
-      debug('wrap class keys array: %o', keys);
-
       for (const key of keys) {
         if (key === 'constructor') continue;
 
         // skip getter, setter & non-function properties & already binded props
         const d = Object.getOwnPropertyDescriptor(proto, key);
         if (isFunction(d.value) && bindedMethods.indexOf(key) < 0) {
-          debug('pushed key: %s', key);
+
           bindedMethods.push(key);
           instance[key] = proto[key].bind(instance);
         }

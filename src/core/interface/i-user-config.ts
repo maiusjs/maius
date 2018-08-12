@@ -1,4 +1,5 @@
-import ConfigMiddlewareItemModel from '../models/mdw-opts-model';
+// import ConfigMiddlewareItemModel from '../models/mdw-opts-model';
+import { IMiddlewareConfig } from '../loader/middleware';
 
 /**
  * Users config.js
@@ -6,7 +7,7 @@ import ConfigMiddlewareItemModel from '../models/mdw-opts-model';
 
 export default interface IUserConfig {
   env?: string;
-  middleware?: IUserConfigMiddlewareOpts[];
+  middleware?: IMiddlewareConfig[];
   static: any;
   logger?: ILoggerConfig;
   views?: {
@@ -15,13 +16,15 @@ export default interface IUserConfig {
     dir: string;
     option?: object;
   };
+  plugin?: { name: string, [x: string]: any }[];
+  [x: string]: any;
 }
 
 /**
  * (alias) the item of config.middleware
  */
 
-export type IUserConfigMiddlewareOpts = string | ConfigMiddlewareItemModel;
+// export type IUserConfigMiddlewareOpts = string | ConfigMiddlewareItemModel;
 
 /**
  * Logger config

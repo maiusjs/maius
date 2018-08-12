@@ -1,7 +1,7 @@
 import * as Debug from 'debug';
 import * as fs from 'fs';
-import merge = require('lodash.merge');
 import * as path from 'path';
+import IUserConfig from '../../interface/i-user-config';
 import { isObject } from '../../utils/type';
 
 const debug = Debug('maius:PluginConfigLoader');
@@ -16,13 +16,15 @@ const log: {
 
 /**
  * Could get merged config of the `plugin/config/` by this.config.
+ *
+ * TODO: replace user-config.ts
  */
 export default class PluginConfigLoader {
   /**
    * The merged config
    * @since 0.1.0
    */
-  public config: any;
+  public config: IUserConfig;
 
   /**
    * Could get merged config of the `plugin/config/` by this.config.
@@ -38,7 +40,7 @@ export default class PluginConfigLoader {
    *
    * @returns - the merged config
    */
-  private mergeMultiUserConfig(dirname): object {
+  private mergeMultiUserConfig(dirname): IUserConfig {
     const config: any = {};
     const defaultConfigFilePath = path.join(dirname, 'config.js');
     const dirList: string[] = [];
@@ -52,7 +54,7 @@ export default class PluginConfigLoader {
       return null;
     }
 
-    debug('%s %o', 'config filelist', fileList);
+    // debug('file list in directory `plugin/config/` %o', fileList);
 
     // load config/config.js
     try {
@@ -94,7 +96,7 @@ export default class PluginConfigLoader {
       this.mergeConfigFolder(filepath, config);
     }
 
-    debug('%s %o', 'Read user config:', config);
+    debug('merged user config %o', config);
     return config;
   }
 
@@ -120,7 +122,6 @@ export default class PluginConfigLoader {
       // check is it illegal
       const rst = /^[a-zA-Z_$][\w$]*$/.exec(basename);
       if (!rst) {
-        debug('%s %o', 'regexp result', rst);
         throw new Error(`Mounting config property failed.
 Please make sure that the config file name dose not contain illegal characters of javascript.`);
       }

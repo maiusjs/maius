@@ -6,16 +6,17 @@ import * as http from 'http';
 import * as KoaApplication from 'koa';
 import * as log4js from 'log4js';
 import * as path from 'path';
-import IUserConfig from './interface/i-user-config';
-import IUserOptions from './interface/i-user-options';
-import BaseContext from './lib/base-context';
-import { httpClient, HttpClient } from './lib/httpclient';
-import Logger from './lib/logger';
-import Router from './lib/router';
-import ControllerLoader from './loader/controller';
-import MiddlewareLoader from './loader/middleware';
-import ServiceLoader from './loader/service';
-import UserConfigLoader from './loader/user-config';
+import IUserConfig from './core/interface/i-user-config';
+import IUserOptions from './core/interface/i-user-options';
+import BaseContext from './core/lib/base-context';
+import { httpClient, HttpClient } from './core/lib/httpclient';
+import Logger from './core/lib/logger';
+import Router from './core/lib/router';
+import ControllerLoader from './core/loader/controller';
+import MiddlewareLoader, { IMiddlewareConfig } from './core/loader/middleware';
+import PluginLoader from './core/loader/plugin/plugin';
+import ServiceLoader from './core/loader/service';
+import UserConfigLoader from './core/loader/user-config';
 
 type Middleware = KoaApplication.Middleware;
 
@@ -23,7 +24,6 @@ export type MaiusContext = KoaApplication.Context;
 
 const debug = Debug('maius:maius');
 
-const MIDDLEWARE_LOADER = Symbol('middleware_loader');
 const CONTROLLER_LOADER = Symbol('controller_loader');
 const SERVICE_LOADER = Symbol('service_loader');
 
@@ -34,14 +34,18 @@ class Maius extends KoaApplication {
 
   public options: IUserOptions;
   public config: IUserConfig;
-  // public app: Application;
   public router: Router;
   public controller: { [x: string]: BaseContext };
   public service: { [x: string]: BaseContext };
   public logger: log4js.Logger;
   public httpClient: HttpClient;
   public ctx: KoaApplication.Context;
-  // private middleware: Middleware[];
+
+  /**
+   * extends from plugin
+   */
+
+  public routeer: any;
 
   /**
    * @constructor
@@ -68,13 +72,6 @@ class Maius extends KoaApplication {
     this.options = options;
 
     /**
-     * user options
-     *
-     * @since 0.1.0
-     */
-    this.options = options;
-
-    /**
      * UserConfigLoader is a single instance class. And the instance will be
      * created here.
      *
@@ -92,11 +89,26 @@ class Maius extends KoaApplication {
     this.env = this.config.env;
 
     /**
+     * Load plugin
+     */
+
+    const pluginLoader = new PluginLoader(this);
+
+    // load internal plugin
+    pluginLoader.loadPlugin([
+      { name: 'maius-router' },
+      { name: 'maius-demo' },
+    ]);
+    // pluginLoader.loadInteralPlugin();
+
+    pluginLoader.loadExternalPlugin();
+
+    /**
      * maius router
      *
      * @since 0.1.0
      */
-    this.router = new Router();
+    // this.router = new Router();
 
     /**
      * Convenient to initiate http request on node server.
@@ -132,6 +144,7 @@ class Maius extends KoaApplication {
      * Init something
      */
     this.loadUserRoutes();
+
     this.useMiddleware();
   }
 
@@ -227,28 +240,20 @@ class Maius extends KoaApplication {
   }
 
   /**
-   * MiddlewareLoader instance
-   *
-   * @private
-   */
-
-  private get middlewareLoader(): MiddlewareLoader {
-    if (this[MIDDLEWARE_LOADER]) {
-      return this[MIDDLEWARE_LOADER];
-    }
-
-    this[MIDDLEWARE_LOADER] = new MiddlewareLoader(this);
-    return this[MIDDLEWARE_LOADER];
-  }
-
-  /**
    * Load all middleware, includes users and maius internal middleware.
    *
    * @private
    */
 
   private useMiddleware(): void {
-    this.middlewareLoader.useAllMiddleware();
+    const dirname = path.join(this.options.rootDir, 'middleware');
+    const middlewareLoader = new MiddlewareLoader(
+      this,
+      dirname,
+      this.config.middleware as IMiddlewareConfig[],
+    );
+
+    middlewareLoader.load();
   }
 
   /**
