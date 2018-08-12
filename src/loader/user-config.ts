@@ -6,7 +6,7 @@ import IUserConfig from '../interface/i-user-config';
 import IUserOptions from '../interface/i-user-options';
 import { isObject } from '../utils/type';
 
-const debug = Debug('maius:userConfigLoader');
+const debug = Debug('maius:UserConfigLoader');
 
 export default class UserConfigLoader {
 
@@ -91,7 +91,13 @@ Please call UserConfigLoader.getInstance() to get instance.`);
     return config;
   }
 
-  private mergeMultiUserConfig() {
+  /**
+   * Merge multi config file in the config folder
+   *
+   * @returns {any} merged config
+   */
+
+  private mergeMultiUserConfig(): any {
     const config: any = {};
     const dirpath = path.join(this.options.rootDir, 'config');
     const defaultConfigFilePath = path.join(dirpath, 'config.js');
@@ -113,7 +119,7 @@ Please call UserConfigLoader.getInstance() to get instance.`);
       try {
         const content = require(defaultConfigFilePath);
         if (isObject(content)) {
-          // this config is empty now, so we also cloud write: config = content;
+          // the config is empty now, so we also cloud writen: config = content;
           Object.assign(config, content);
         }
       } catch (error) {
@@ -139,7 +145,6 @@ Please call UserConfigLoader.getInstance() to get instance.`);
       } catch (e) {
         continue;
       }
-
     }
 
     // handle the config file in some direction.
@@ -162,9 +167,9 @@ Please call UserConfigLoader.getInstance() to get instance.`);
       content = require(filepath);
 
       // single file must export out an object
-      if (!isObject(content)) {
-        throw new Error('Must export out an object');
-      }
+      // if (!isObject(content)) {
+      //   throw new Error('Must export out an object');
+      // }
 
       // check is it illegal
       const rst = /^[a-zA-Z_$][\w$]*$/.exec(basename);
