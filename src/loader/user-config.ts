@@ -86,7 +86,7 @@ Please call UserConfigLoader.getInstance() to get instance.`);
       },
       config.logger || {});
 
-    debug('config: %o', config);
+    debug('return config: %o', config);
 
     return config;
   }
@@ -153,7 +153,7 @@ Please call UserConfigLoader.getInstance() to get instance.`);
       this.mergeConfigByDirectory(filepath, config);
     }
 
-    debug('%s %o', 'Read user config:', config);
+    debug('merged config: %o', config);
     return config;
   }
 
@@ -184,9 +184,7 @@ Please make sure that the config file name dose not contain illegal characters o
         return;
       }
 
-      merge(config[basename], content);
-      // config[basename] = content;
-
+      config[basename] = content;
     } catch (error) {
       console.warn(`Load config error in the file: ${filepath}`);
       console.warn(error);
