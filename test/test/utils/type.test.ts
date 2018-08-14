@@ -1,4 +1,4 @@
-import { isFunction, isObject } from '../../../src/utils/type';
+import { isFunction, isObject } from '../../../src/core/utils/type';
 
 const o = [
   { type: 'string', value: 'foo' },

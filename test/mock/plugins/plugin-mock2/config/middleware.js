@@ -1,5 +1,5 @@
-module.exports = [
-  {
-    name: 'mdw1',
-  }
-];
+module.exports = [{
+  name: 'mdw1',
+}, {
+  name: 'fn1',
+}];

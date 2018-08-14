@@ -1,5 +1,5 @@
 export default class MockPlugin {
-  constructor(app) {
-    app.mock = 'mock';
+  constructor(app, config) {
+    console.log('plugin config:', config);
   }
 }
