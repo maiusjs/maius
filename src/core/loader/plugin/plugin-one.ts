@@ -1,17 +1,22 @@
 import * as Debug from 'debug';
 import * as fs from 'fs';
+import { Middleware } from 'koa';
 import * as path from 'path';
 import Maius from '../../../maius';
-import callClassOrFn from '../../utils/callClassOrFn';
+import callClassOrFn from '../../utils/call-class-or-fn';
+import ConfigLoader, { IUserConfig } from '../config';
 import MiddlewareLoader from '../middleware';
-import PluginConfigLoader from './plugin-config';
 
 const debug = Debug('maius:PluginOneLoader');
+
+export interface IPlugin {
+  middleware?: ((...args: any[]) => Middleware)[];
+}
 
 /**
  * plugin config
  */
-export interface IPluginConfig {
+export interface IPluginOptions {
   name: string;
   [x: string]: any;
 }
@@ -37,29 +42,27 @@ export default class PluginOneLoader {
    * Plugin config collection.
    * @since 0.1.0
    */
-  public pluginConfig: any;
+  public options: IPluginOptions;
 
   /**
-   * The middleware list that legal and not disabled.
+   * the config in the plugin/config
    * @since 0.1.0
    */
-  // public middlewareConfig: IMiddlewareConfig[];
+  public config: IUserConfig;
 
   private app: Maius;
-  private config: any;
-  // private middlewareLoader: PluginMiddlewareLoader;
 
   /**
    * Load one plugin
    *
-   * @param dirname the target plugin directory.
-   * @param config target plugin config.
    * @param app the maius instance.
+   * @param dirname the target plugin directory.
+   * @param options target plugin config.
    */
-  constructor(app: Maius, dirname: string, pluginConfig: IPluginConfig) {
+  constructor(app: Maius, dirname: string, options: IPluginOptions) {
     this.app = app;
     this.dirname = dirname;
-    this.pluginConfig = pluginConfig;
+    this.options = options;
 
     this.directory = {
       config: path.join(this.dirname, 'config'),
@@ -68,10 +71,17 @@ export default class PluginOneLoader {
 
     // load config in plugin/config/
     if (fs.existsSync(path.join(this.directory.config))) {
-      this.config = new PluginConfigLoader(this.directory.config).config;
+      this.config = new ConfigLoader(this.directory.config).config;
     } else {
       this.config = {};
     }
+  }
+
+  /**
+   * Load plugin
+   */
+  public load(): void {
+    debug('load plugin %s', this.options.name);
 
     // call the entry file
     this.callEntry();
@@ -85,7 +95,7 @@ export default class PluginOneLoader {
         this.app,
         path.join(this.dirname, 'middleware'),
         this.config.middleware,
-      ).load(pluginConfig);
+      ).load(this.options);
     }
   }
 
@@ -105,8 +115,10 @@ export default class PluginOneLoader {
     }
 
     try {
-      callClassOrFn(pluginPath, [this.app, this.pluginConfig]);
+      const content = require(pluginPath);
+      callClassOrFn(content, [this.app, this.options]);
     } catch (error) {
+      console.error(error);
       throw new Error(`The plugin.(js|ts) is not a class or function in ${pluginPath}`);
     }
   }

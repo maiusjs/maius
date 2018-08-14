@@ -123,7 +123,6 @@ export default class Static extends BaseMiddleware {
   private makeViewsConfig(): IViewsConfig {
     const userConfig = this.userConfig.views;
     const engine = (userConfig && userConfig.engine) || 'ejs';
-
     const config = this.supportMap.get(engine);
 
     assert(
@@ -135,6 +134,7 @@ export default class Static extends BaseMiddleware {
 
     config.dir = (userConfig && userConfig.dir) || config.dir;
     config.extension = (userConfig && userConfig.extension) || config.extension;
+
     const newConfig: IViewsConfig = {
       dir: config.dir,
       options: {

@@ -5,7 +5,7 @@ import * as path from 'path';
 import Maius from '../../maius';
 import { isFunction } from '../utils/type';
 
-const debug = Debug('maius:MiddlewareLoader2');
+const debug = Debug('maius:MiddlewareLoader');
 
 export interface IMiddlewareConfig {
   name: string | ((...args: any[]) => Middleware);
@@ -59,7 +59,6 @@ export default class MiddlewareLoader {
    * @param extendArgs the arguments third arugment and after.
    */
   public load(...extendArgs: any[]) {
-    const execFnList: string[] = [];
 
     for (let i = 0; i < this.middlewareConfigList.length; i += 1) {
       const itemConfig: IMiddlewareConfig = this.middlewareConfigList[i];
@@ -69,7 +68,7 @@ export default class MiddlewareLoader {
       // name as Middleware
       if (isFunction(name)) {
         mdw = name as (...args: any[]) => Middleware;
-        execFnList.push('[Function]');
+        debug('use middleware - %s', mdw.name);
 
       // name as string
       } else if ('string' === typeof name) {
@@ -81,19 +80,21 @@ export default class MiddlewareLoader {
         }
 
         mdw = this.middlewareFnCol[name];
-        execFnList.push(name);
+        debug('use middleware - %s', name);
+
       } else {
         continue;
       }
 
       const args = itemConfig.args;
       const options = itemConfig.options;
+
+      const fn = args
+        ? mdw(...args)
+        : mdw(options, this.app, ...extendArgs);
+
       // use the middlware
-      if (args) {
-        this.app.use(mdw(...args));
-      } else {
-        this.app.use(mdw(options, this.app, ...extendArgs));
-      }
+      this.app.use(fn);
     }
   }
 

@@ -6,24 +6,24 @@ import * as http from 'http';
 import * as KoaApplication from 'koa';
 import * as log4js from 'log4js';
 import * as path from 'path';
-import IUserConfig from './core/interface/i-user-config';
-import IUserOptions from './core/interface/i-user-options';
 import BaseContext from './core/lib/base-context';
 import { httpClient, HttpClient } from './core/lib/httpclient';
 import Logger from './core/lib/logger';
 import Router from './core/lib/router';
+import configLoader, { IUserConfig } from './core/loader/config';
 import ControllerLoader from './core/loader/controller';
 import MiddlewareLoader, { IMiddlewareConfig } from './core/loader/middleware';
 import PluginLoader from './core/loader/plugin/plugin';
 import ServiceLoader from './core/loader/service';
-import UserConfigLoader from './core/loader/user-config';
-
-type Middleware = KoaApplication.Middleware;
 
 export type MaiusContext = KoaApplication.Context;
 
-const debug = Debug('maius:maius');
+export interface IUserOptions {
+  rootDir: string;
+  port?: number;
+}
 
+const debug = Debug('maius:maius');
 const CONTROLLER_LOADER = Symbol('controller_loader');
 const SERVICE_LOADER = Symbol('service_loader');
 
@@ -40,12 +40,6 @@ class Maius extends KoaApplication {
   public logger: log4js.Logger;
   public httpClient: HttpClient;
   public ctx: KoaApplication.Context;
-
-  /**
-   * extends from plugin
-   */
-
-  public routeer: any;
 
   /**
    * @constructor
@@ -77,7 +71,10 @@ class Maius extends KoaApplication {
      *
      * @since 0.1.0
      */
-    this.config = UserConfigLoader.create(this.options).config;
+    // this.config = UserConfigLoader.create(this.options).config;
+    this.config = new configLoader(path.join(this.options.rootDir, 'config')).config;
+
+    debug('maius config: %o', this.config);
 
     this.logger = Logger.create(this.config.logger, this.options).getlogger();
 
@@ -87,40 +84,6 @@ class Maius extends KoaApplication {
      * @since 0.1.0
      */
     this.env = this.config.env;
-
-    /**
-     * Load plugin
-     */
-
-    const pluginLoader = new PluginLoader(this);
-
-    // load internal plugin
-    pluginLoader.loadPlugin([
-      { name: 'maius-router' },
-      { name: 'maius-demo' },
-    ]);
-    // pluginLoader.loadInteralPlugin();
-
-    pluginLoader.loadExternalPlugin();
-
-    /**
-     * maius router
-     *
-     * @since 0.1.0
-     */
-    // this.router = new Router();
-
-    /**
-     * Convenient to initiate http request on node server.
-     * It provides a lot of convenient methods for requesting.
-     *
-     * e.g.
-     *    httpClient.get('xx').then(res => console.log(res));
-     *    httpClient.post('xx').then(res => console.log(res));
-     *
-     * @since 0.1.0
-     */
-    this.httpClient = httpClient;
 
     /**
      * controller instances collection
@@ -140,12 +103,35 @@ class Maius extends KoaApplication {
 
     debug('this.service %o', this.service);
 
-    /**
-     * Init something
-     */
-    this.loadUserRoutes();
+    // pluin loader
+    const pluginLoader = new PluginLoader(this);
+
+    // load internal plugin
+    pluginLoader.loadPlugin([
+      /**
+       * @since 0.1.0
+       */
+      { name: 'maius-views' },
+      { name: 'maius-static', options: [
+        path.join(this.options.rootDir, 'public'),
+      ]},
+    ]);
+
+    // load external plugin
+    pluginLoader.loadExternalPlugin();
 
     this.useMiddleware();
+
+    // router middleware have to use after other middleware.
+    pluginLoader.loadPlugin([
+      /**
+       * this.router
+       * @since 0.1.0
+       */
+      { name: 'maius-router' },
+    ]);
+
+    this.loadUserRoutes();
   }
 
   /**
@@ -252,7 +238,6 @@ class Maius extends KoaApplication {
       dirname,
       this.config.middleware as IMiddlewareConfig[],
     );
-
     middlewareLoader.load();
   }
 
@@ -281,5 +266,6 @@ class Maius extends KoaApplication {
 }
 
 export default Maius;
+
 module.exports = Maius;
 module.exports.default = Maius;

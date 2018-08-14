@@ -2,14 +2,13 @@ import * as Debug from 'debug';
 import * as fs from 'fs';
 import * as path from 'path';
 import Maius from '../../../maius';
-import PluginOneLoader, { IPluginConfig } from './plugin-one';
+import PluginOneLoader, { IPluginOptions } from './plugin-one';
 
 const debug = Debug('maius:PluginListLoader');
 
 export interface IPluginItem {
   dirname: string;
-  config: IPluginConfig;
-  module?: boolean; // is it npm package
+  config: IPluginOptions;
 }
 
 export default class PluginListLoader {
@@ -22,7 +21,7 @@ export default class PluginListLoader {
   private pluginList: IPluginItem[];
 
   /**
-   * Create a pluginLoader
+   * Create a pluginListLoader, it cloud load a lot of plugin
    *
    * @param app - The instance of Maius program.
    * @param pluginList - an array of IPluginItem.
@@ -53,6 +52,7 @@ export default class PluginListLoader {
       try {
         const stat = fs.statSync(dirname);
         if (!stat.isDirectory) {
+          console.warn(`[Maius] There is not ${dirname} folder.`);
           continue;
         }
       } catch (error) {
@@ -61,9 +61,9 @@ export default class PluginListLoader {
 
       // load one plugin
       try {
-        const pluginOneLoader = new PluginOneLoader(this.app, dirname, config);
+        new PluginOneLoader(this.app, dirname, config).load();
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
 
       // merge config

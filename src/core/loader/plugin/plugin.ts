@@ -2,7 +2,7 @@ import * as Debug from 'debug';
 import * as fs from 'fs';
 import * as path from 'path';
 import Maius from '../../../maius';
-import IUserConfig from '../../interface/i-user-config';
+import { IUserConfig } from '../config';
 import PluginListLoader, { IPluginItem } from './plugin-list';
 
 const debug = Debug('maius:PluginLoader');
@@ -61,11 +61,12 @@ export default class PluginLoader {
    * @param configList plugin config list.
    */
   public loadPlugin(configList: IUserConfig['plugin']): void {
-    // Don't load any external plugin if don't have plugin config
     if (!configList
       || !Array.isArray(configList)
       || !configList.length
-    ) return;
+    ) {
+      throw new Error('Execpt an array as the parameter');
+    }
 
     debug('loading plugins: %o', configList);
 
@@ -78,6 +79,8 @@ export default class PluginLoader {
       const dirname = this.lookupPath(config.name);
       if (dirname) {
         loadList.push({ dirname, config });
+      } else {
+        console.warn('Not fount plugin', config.name);
       }
     }
 

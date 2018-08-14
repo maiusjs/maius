@@ -1,8 +1,8 @@
 import * as Debug from 'debug';
 import * as fs from 'fs';
 import * as path from 'path';
-import IUserConfig from '../../interface/i-user-config';
-import { isObject } from '../../utils/type';
+import { isObject } from '../utils/type';
+import { IMiddlewareConfig } from './middleware';
 
 const debug = Debug('maius:PluginConfigLoader');
 
@@ -14,12 +14,27 @@ const log: {
   },
 };
 
+export interface IUserConfig {
+  env?: string;
+  middleware?: IMiddlewareConfig[];
+  plugin?: { name: string, [x: string]: any }[];
+  // static: any;
+  // logger?: ILoggerConfig;
+  // views?: {
+  //   engine: string;
+  //   extension: string;
+  //   dir: string;
+  //   option?: object;
+  // };
+  [x: string]: any;
+}
+
 /**
  * Could get merged config of the `plugin/config/` by this.config.
  *
  * TODO: replace user-config.ts
  */
-export default class PluginConfigLoader {
+export default class ConfigLoader {
   /**
    * The merged config
    * @since 0.1.0

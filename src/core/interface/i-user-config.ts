@@ -1,25 +1,3 @@
-// import ConfigMiddlewareItemModel from '../models/mdw-opts-model';
-import { IMiddlewareConfig } from '../loader/middleware';
-
-/**
- * Users config.js
- */
-
-export default interface IUserConfig {
-  env?: string;
-  middleware?: IMiddlewareConfig[];
-  static: any;
-  logger?: ILoggerConfig;
-  views?: {
-    engine: string;
-    extension: string;
-    dir: string;
-    option?: object;
-  };
-  plugin?: { name: string, [x: string]: any }[];
-  [x: string]: any;
-}
-
 /**
  * (alias) the item of config.middleware
  */
