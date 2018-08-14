@@ -8,7 +8,7 @@
     "dist": "node_modules/.bin/gulp dist:prd",
     "dev": "DEBUG=maius:* node_modules/.bin/gulp dev",
     "dev:plugin": "DEBUG=maius:Plugin* node_modules/.bin/gulp dev",
-    "preversion": "npm run dist",
+    "preversion": "npm run test && npm run dist",
     "version": "npm run dist && git add --all dist",
     "postversion": "npm publish"
   },
