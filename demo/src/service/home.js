@@ -1,4 +1,4 @@
-const { Service } = require('../../dev/maius');
+const { Service } = require('../../../dev/maius');
 
 module.exports = class HomeService extends Service {
   async number(num) {

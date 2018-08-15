@@ -1,4 +1,4 @@
-const { Controller } = require('../../dev/maius');
+const { Controller } = require('../../../dev/maius');
 
 module.exports = class HomeController extends Controller {
   async getNumber(ctx, next) {

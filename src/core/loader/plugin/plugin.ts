@@ -16,7 +16,7 @@ export default class PluginLoader {
    *
    * @param app maius instance.
    */
-  constructor(app) {
+  constructor(app: Maius) {
     this.app = app;
 
     const APP_PATH = this.app.options.rootDir;
@@ -26,7 +26,7 @@ export default class PluginLoader {
 
     // finding the plugin directory in the following order.
     this.lookArray = [
-      path.join(APP_PATH, 'plugin'),
+      path.join(APP_PATH, this.app.dirname.PLUGIN),
       path.join(APP_PROJECT_ROOT, 'node_modules'),
       path.join(MAIUS_INTERNAL_PLUGIN_PATH),
       path.join(MAIUS_PROJECT_ROOT, 'node_modules'),
