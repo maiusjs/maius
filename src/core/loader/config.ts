@@ -13,9 +13,6 @@ const log: {
   },
 };
 
-/**
- * config.view
- */
 interface IViewConfig {
   /**
    * view dirname
@@ -24,30 +21,44 @@ interface IViewConfig {
 
   options: {
     /*
-    * default extension for your views
-    */
+     * default extension for your views
+     */
     extension?: string,
     /*
-    * these options will get passed to the view engine
-    */
+     * these options will get passed to the view engine
+     */
     options?: any,
     /*
-    * map a file extension to an engine
-    */
+     * map a file extension to an engine
+     */
     map?: any,
     /*
-    * replace consolidate as default engine source
-    */
+     * replace consolidate as default engine source
+     */
     engineSource?: any,
   };
+}
+
+export interface ILoggerConfig {
+  /**
+   * Log file will save to
+   */
+  directory?: string;
+  /**
+   * Log log level
+   */
+  level?: string;
+  /**
+   * Need stdout
+   */
+  stdout?: boolean;
 }
 
 export interface IConfig {
   env?: string;
   middleware?: IMiddlewareConfig[];
   plugin?: { name: string, [x: string]: any }[];
-  // static: any;
-  // logger?: ILoggerConfig;
+  logger?: ILoggerConfig;
   view?: IViewConfig;
   [x: string]: any;
 }
@@ -58,11 +69,8 @@ export interface IConfig {
  * TODO: replace user-config.ts
  */
 export default class ConfigLoader {
-  /**
-   * The merged config
-   * @since 0.1.0
-   */
-  public config: IConfig;
+  private dirname: string;
+  private config: IConfig;
 
   /**
    * Could get merged config of the `plugin/config/` by this.config.
@@ -70,7 +78,19 @@ export default class ConfigLoader {
    * @param dirname The config directory path in the plugin.
    */
   constructor(dirname: string) {
-    this.config = this.mergeMultiUserConfig(dirname);
+    this.dirname = dirname;
+    this.config = null;
+  }
+
+  /**
+   * Get the merged user config
+   * @return user config
+   * @since 0.1.0
+   */
+  public getConfig(): IConfig {
+    if (this.config) return this.config;
+    this.config = this.mergeMultiUserConfig(this.dirname);
+    return this.config;
   }
 
   /**
@@ -89,7 +109,7 @@ export default class ConfigLoader {
       fileList = fs.readdirSync(dirname);
     } catch (error) {
       debug('Not found config root directory: %s', dirname);
-      return null;
+      return {};
     }
 
     // debug('file list in directory `plugin/config/` %o', fileList);

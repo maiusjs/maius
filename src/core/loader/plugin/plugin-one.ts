@@ -71,7 +71,7 @@ export default class PluginOneLoader {
 
     // load config in plugin/config/
     if (fs.existsSync(path.join(this.directory.config))) {
-      this.config = new ConfigLoader(this.directory.config).config;
+      this.config = new ConfigLoader(this.directory.config).getConfig();
     } else {
       this.config = {};
     }

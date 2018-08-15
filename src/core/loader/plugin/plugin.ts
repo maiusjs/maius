@@ -50,7 +50,9 @@ export default class PluginLoader {
   public loadExternalPlugin(): void {
     const pluginConfigList = this.app.config.plugin;
 
-    // debug('external plugin: %o', pluginConfigList);
+    if (!Array.isArray(pluginConfigList)) {
+      return;
+    }
 
     this.loadPlugin(pluginConfigList);
   }
@@ -65,10 +67,9 @@ export default class PluginLoader {
       || !Array.isArray(configList)
       || !configList.length
     ) {
-      throw new Error('Execpt an array as the parameter');
+      console.log(configList);
+      throw new Error('Expect an array as the parameter');
     }
-
-    debug('loading plugins: %o', configList);
 
     // the plugins will to load.
     const loadList: IPluginItem[] = [];

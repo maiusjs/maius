@@ -1,7 +1,7 @@
 import * as log4js from 'log4js';
 import * as path from 'path';
 import { IOptions } from '../../maius';
-import { ILoggerConfig } from '../interface/i-user-config';
+import { ILoggerConfig } from '../loader/config';
 
 export default class Logger {
 

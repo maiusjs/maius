@@ -2,6 +2,7 @@ import * as accepts from 'accepts';
 import * as assert from 'assert';
 import * as Cookies from 'cookies';
 import * as Debug from 'debug';
+import * as fs from 'fs';
 import * as http from 'http';
 import * as KoaApplication from 'koa';
 import * as log4js from 'log4js';
@@ -71,15 +72,14 @@ class Maius extends KoaApplication {
      *
      * @since 0.1.0
      */
-    this.config = new configLoader(path.join(this.options.rootDir, 'config')).config;
+    this.config = new configLoader(path.join(this.options.rootDir, 'config')).getConfig();
 
     debug('maius config: %o', this.config);
 
     /**
      * @since 0.1.0
      */
-    this.logger = Logger.create(this.config.logger, this.options).getlogger();
-
+    this.logger = this.getLogger();
     /**
      * Koa appliction instance
      *
@@ -204,6 +204,20 @@ class Maius extends KoaApplication {
   }
 
   /**
+   * get a logger
+   */
+  private getLogger(): log4js.Logger {
+    const opts = this.config.logger
+      ? this.config.logger
+      : {
+        directory: path.join(this.options.rootDir, 'logs'),
+        level: 'DEBUG',
+      };
+
+    return Logger.create(opts, this.options).getlogger();
+  }
+
+  /**
    * controller loader, and the loader is a single instance.
    *
    * @private
@@ -258,8 +272,16 @@ class Maius extends KoaApplication {
    */
 
   private loadUserRoutes(): void {
+    const filename = path.join(this.options.rootDir, 'router.js');
+    if (!fs.existsSync(filename)) {
+      debug(`Not found routes ${filename}`);
+      return;
+    }
+
     const router = require(path.join(this.options.rootDir, 'router.js'));
+
     assert('function' === typeof router, 'router.js must be a function type!');
+
     router({
       controller: this.controller,
       router: this.router,
