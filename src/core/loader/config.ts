@@ -5,7 +5,6 @@ import { isObject } from '../utils/type';
 import { IMiddlewareConfig } from './middleware';
 
 const debug = Debug('maius:PluginConfigLoader');
-
 const log: {
   loadFileError: (filename: string, error: Error) => void;
 } = {
@@ -14,18 +13,42 @@ const log: {
   },
 };
 
-export interface IUserConfig {
+/**
+ * config.view
+ */
+interface IViewConfig {
+  /**
+   * view dirname
+   */
+  root: string;
+
+  options: {
+    /*
+    * default extension for your views
+    */
+    extension?: string,
+    /*
+    * these options will get passed to the view engine
+    */
+    options?: any,
+    /*
+    * map a file extension to an engine
+    */
+    map?: any,
+    /*
+    * replace consolidate as default engine source
+    */
+    engineSource?: any,
+  };
+}
+
+export interface IConfig {
   env?: string;
   middleware?: IMiddlewareConfig[];
   plugin?: { name: string, [x: string]: any }[];
   // static: any;
   // logger?: ILoggerConfig;
-  // views?: {
-  //   engine: string;
-  //   extension: string;
-  //   dir: string;
-  //   option?: object;
-  // };
+  view?: IViewConfig;
   [x: string]: any;
 }
 
@@ -39,7 +62,7 @@ export default class ConfigLoader {
    * The merged config
    * @since 0.1.0
    */
-  public config: IUserConfig;
+  public config: IConfig;
 
   /**
    * Could get merged config of the `plugin/config/` by this.config.
@@ -55,7 +78,7 @@ export default class ConfigLoader {
    *
    * @returns - the merged config
    */
-  private mergeMultiUserConfig(dirname): IUserConfig {
+  private mergeMultiUserConfig(dirname): IConfig {
     const config: any = {};
     const defaultConfigFilePath = path.join(dirname, 'config.js');
     const dirList: string[] = [];
@@ -111,7 +134,7 @@ export default class ConfigLoader {
       this.mergeConfigFolder(filepath, config);
     }
 
-    debug('merged user config %o', config);
+    // debug('merged user config %o', config);
     return config;
   }
 

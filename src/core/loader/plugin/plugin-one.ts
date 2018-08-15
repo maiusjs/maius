@@ -4,7 +4,7 @@ import { Middleware } from 'koa';
 import * as path from 'path';
 import Maius from '../../../maius';
 import callClassOrFn from '../../utils/call-class-or-fn';
-import ConfigLoader, { IUserConfig } from '../config';
+import ConfigLoader, { IConfig } from '../config';
 import MiddlewareLoader from '../middleware';
 
 const debug = Debug('maius:PluginOneLoader');
@@ -48,7 +48,7 @@ export default class PluginOneLoader {
    * the config in the plugin/config
    * @since 0.1.0
    */
-  public config: IUserConfig;
+  public config: IConfig;
 
   private app: Maius;
 
@@ -81,7 +81,7 @@ export default class PluginOneLoader {
    * Load plugin
    */
   public load(): void {
-    debug('load plugin %s', this.options.name);
+    debug('load plugin - %s', this.options.name);
 
     // call the entry file
     this.callEntry();

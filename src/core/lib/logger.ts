@@ -1,6 +1,6 @@
 import * as log4js from 'log4js';
 import * as path from 'path';
-import { IUserOptions } from '../../maius';
+import { IOptions } from '../../maius';
 import { ILoggerConfig } from '../interface/i-user-config';
 
 export default class Logger {
@@ -8,7 +8,7 @@ export default class Logger {
   public static instance: Logger;
   public static levels = log4js.levels;
 
-  public static create(config: ILoggerConfig, options: IUserOptions): Logger {
+  public static create(config: ILoggerConfig, options: IOptions): Logger {
     if (Logger.instance) {
       return Logger.instance;
     }
@@ -20,7 +20,7 @@ export default class Logger {
     return Logger.instance;
   }
 
-  constructor(config: ILoggerConfig, options: IUserOptions) {
+  constructor(config: ILoggerConfig, options: IOptions) {
 
     config.level = config.level || 'DEBUG';
     config.directory = config.directory || path.resolve(options.rootDir);

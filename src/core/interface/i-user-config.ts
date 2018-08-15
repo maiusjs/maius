@@ -7,6 +7,7 @@
 /**
  * Logger config
  */
+export default {};
 
 export interface ILoggerConfig {
   directory?: string;

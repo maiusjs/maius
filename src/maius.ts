@@ -10,7 +10,7 @@ import BaseContext from './core/lib/base-context';
 import { HttpClient } from './core/lib/httpclient';
 import Logger from './core/lib/logger';
 import Router from './core/lib/router';
-import configLoader, { IUserConfig } from './core/loader/config';
+import configLoader, { IConfig } from './core/loader/config';
 import ControllerLoader from './core/loader/controller';
 import MiddlewareLoader, { IMiddlewareConfig } from './core/loader/middleware';
 import PluginLoader from './core/loader/plugin/plugin';
@@ -18,7 +18,7 @@ import ServiceLoader from './core/loader/service';
 
 export type MaiusContext = KoaApplication.Context;
 
-export interface IUserOptions {
+export interface IOptions {
   rootDir: string;
   port?: number;
 }
@@ -32,8 +32,8 @@ class Maius extends KoaApplication {
   public static Service = BaseContext;
   public static Logger = Logger;
 
-  public options: IUserOptions;
-  public config: IUserConfig;
+  public options: IOptions;
+  public config: IConfig;
   public router: Router;
   public controller: { [x: string]: BaseContext };
   public service: { [x: string]: BaseContext };
@@ -48,7 +48,7 @@ class Maius extends KoaApplication {
    * @param [options.port] the port of user appliction will run at
    */
 
-  constructor(options: IUserOptions) {
+  constructor(options: IOptions) {
     super();
 
     this.errorHandler();

@@ -2,7 +2,7 @@ import * as Debug from 'debug';
 import * as fs from 'fs';
 import * as path from 'path';
 import Maius from '../../../maius';
-import { IUserConfig } from '../config';
+import { IConfig } from '../config';
 import PluginListLoader, { IPluginItem } from './plugin-list';
 
 const debug = Debug('maius:PluginLoader');
@@ -60,7 +60,7 @@ export default class PluginLoader {
    *
    * @param configList plugin config list.
    */
-  public loadPlugin(configList: IUserConfig['plugin']): void {
+  public loadPlugin(configList: IConfig['plugin']): void {
     if (!configList
       || !Array.isArray(configList)
       || !configList.length
