@@ -7,7 +7,7 @@ import * as KoaApplication from 'koa';
 import * as log4js from 'log4js';
 import * as path from 'path';
 import BaseContext from './core/lib/base-context';
-import { httpClient, HttpClient } from './core/lib/httpclient';
+import { HttpClient } from './core/lib/httpclient';
 import Logger from './core/lib/logger';
 import Router from './core/lib/router';
 import configLoader, { IUserConfig } from './core/loader/config';
@@ -71,11 +71,13 @@ class Maius extends KoaApplication {
      *
      * @since 0.1.0
      */
-    // this.config = UserConfigLoader.create(this.options).config;
     this.config = new configLoader(path.join(this.options.rootDir, 'config')).config;
 
     debug('maius config: %o', this.config);
 
+    /**
+     * @since 0.1.0
+     */
     this.logger = Logger.create(this.config.logger, this.options).getlogger();
 
     /**
@@ -84,6 +86,41 @@ class Maius extends KoaApplication {
      * @since 0.1.0
      */
     this.env = this.config.env;
+
+    // pluin loader
+    const pluginLoader = new PluginLoader(this);
+
+    // load internal plugin
+    pluginLoader.loadPlugin([
+      /**
+       * @since 0.1.0
+       */
+      { name: 'maius-logger' },
+      /**
+       * @since 0.1.0
+       */
+      { name: 'maius-views' },
+      /**
+       * @since 0.1.0
+       */
+      { name: 'maius-static', options: [
+        path.join(this.options.rootDir, 'public'),
+      ]},
+    ]);
+
+    // load external plugin
+    pluginLoader.loadExternalPlugin();
+
+    this.useMiddleware();
+
+    // router middleware have to be used after other middleware.
+    pluginLoader.loadPlugin([
+      /**
+       * this.router
+       * @since 0.1.0
+       */
+      { name: 'maius-router' },
+    ]);
 
     /**
      * controller instances collection
@@ -103,34 +140,9 @@ class Maius extends KoaApplication {
 
     debug('this.service %o', this.service);
 
-    // pluin loader
-    const pluginLoader = new PluginLoader(this);
-
-    // load internal plugin
-    pluginLoader.loadPlugin([
-      /**
-       * @since 0.1.0
-       */
-      { name: 'maius-views' },
-      { name: 'maius-static', options: [
-        path.join(this.options.rootDir, 'public'),
-      ]},
-    ]);
-
-    // load external plugin
-    pluginLoader.loadExternalPlugin();
-
-    this.useMiddleware();
-
-    // router middleware have to use after other middleware.
-    pluginLoader.loadPlugin([
-      /**
-       * this.router
-       * @since 0.1.0
-       */
-      { name: 'maius-router' },
-    ]);
-
+    /**
+     * load user routes.
+     */
     this.loadUserRoutes();
   }
 
