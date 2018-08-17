@@ -28,6 +28,7 @@ declare class Maius extends KoaApplication {
     static Controller: typeof BaseContext;
     static Service: typeof BaseContext;
     static Logger: typeof Logger;
+    version: string;
     options: IOptions;
     config: IConfig;
     router: Router;
@@ -44,6 +45,7 @@ declare class Maius extends KoaApplication {
     constructor(options: IOptions);
     listen(...args: any[]): any;
     createContext(req: http.IncomingMessage, res: http.ServerResponse): KoaApplication.Context;
+    private getPackageJSON;
     private getLogger;
     private readonly controllerLoader;
     private readonly serviceLoader;

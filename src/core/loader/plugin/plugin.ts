@@ -67,7 +67,6 @@ export default class PluginLoader {
       || !Array.isArray(configList)
       || !configList.length
     ) {
-      console.log(configList);
       throw new Error('Expect an array as the parameter');
     }
 

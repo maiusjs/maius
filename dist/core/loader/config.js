@@ -7,7 +7,7 @@ const type_1 = require("../utils/type");
 const debug = Debug('maius:PluginConfigLoader');
 const log = {
     loadFileError(filename, error) {
-        console.warn(`Load config error in the file: ${filename}\n`, error);
+        console.error(`Load config error in the file: ${filename}\n`, error);
     },
 };
 class ConfigLoader {
@@ -44,6 +44,8 @@ class ConfigLoader {
         for (let i = 0; i < fileList.length; i += 1) {
             const name = fileList[i];
             const filepath = path.join(dirname, name);
+            if (!/\.js$/.test(filepath))
+                continue;
             const stat = fs.statSync(filepath);
             const isFile = stat.isFile();
             const isDirectory = stat.isDirectory();
@@ -72,8 +74,8 @@ class ConfigLoader {
             content = require(filepath);
             const rst = /^[a-zA-Z_$][\w$]*$/.exec(basename);
             if (!rst) {
-                throw new Error(`Mounting config property failed.
-Please make sure that the config file name dose not contain illegal characters of javascript.`);
+                throw new Error('Mounting config property failed, ' +
+                    'Please make sure that the config file name dose not contain illegal characters of javascript.');
             }
             if (basename === 'config') {
                 return;

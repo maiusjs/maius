@@ -9,7 +9,7 @@ const log: {
   loadFileError: (filename: string, error: Error) => void;
 } = {
   loadFileError(filename, error: Error) {
-    console.warn(`Load config error in the file: ${filename}\n`, error);
+    console.error(`Load config error in the file: ${filename}\n`, error);
   },
 };
 
@@ -131,6 +131,9 @@ export default class ConfigLoader {
       const name: string = fileList[i]; // file name
       const filepath: string = path.join(dirname, name);
 
+      // check is it end with .js
+      if (!/\.js$/.test(filepath)) continue;
+
       const stat = fs.statSync(filepath);
       const isFile: boolean = stat.isFile();
       const isDirectory: boolean = stat.isDirectory();
@@ -180,8 +183,8 @@ export default class ConfigLoader {
       // check is it illegal
       const rst = /^[a-zA-Z_$][\w$]*$/.exec(basename);
       if (!rst) {
-        throw new Error(`Mounting config property failed.
-Please make sure that the config file name dose not contain illegal characters of javascript.`);
+        throw new Error('Mounting config property failed, ' +
+'Please make sure that the config file name dose not contain illegal characters of javascript.');
       }
 
       // config/config.js had handled, so will jump it.

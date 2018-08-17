@@ -44,6 +44,7 @@ class Maius extends KoaApplication {
   public static Service = BaseContext;
   public static Logger = Logger;
 
+  public version: string;
   public options: IOptions;
   public config: IConfig;
   public router: Router;
@@ -70,6 +71,8 @@ class Maius extends KoaApplication {
       typeof options.rootDir === 'string',
       'options.rootDir config error!',
     );
+
+    this.version = this.getPackageJSON().version;
 
     /**
      * @since 0.1.0
@@ -218,6 +221,14 @@ class Maius extends KoaApplication {
     context.accept = request.accept = accepts(req);
     context.state = {};
     return context;
+  }
+
+  /**
+   * get package.json
+   */
+  private getPackageJSON() {
+    const PATH = path.resolve(__dirname, '../package.json');
+    return require(PATH);
   }
 
   /**

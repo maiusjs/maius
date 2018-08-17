@@ -33,6 +33,7 @@ class Maius extends KoaApplication {
         super();
         this.errorHandler();
         assert(typeof options.rootDir === 'string', 'options.rootDir config error!');
+        this.version = this.getPackageJSON().version;
         this.dirname = dirname;
         this.options = options;
         this.config = new config_1.default(path.join(this.options.rootDir, dirname.CONFIG)).getConfig();
@@ -96,6 +97,10 @@ class Maius extends KoaApplication {
         context.accept = request.accept = accepts(req);
         context.state = {};
         return context;
+    }
+    getPackageJSON() {
+        const PATH = path.resolve(__dirname, '../package.json');
+        return require(PATH);
     }
     getLogger() {
         const opts = this.config.logger

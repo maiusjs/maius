@@ -114,11 +114,14 @@ export default class MiddlewareLoader {
 
     for (let i = 0; i < fileList.length; i += 1) {
       const filename: string = fileList[i];
-      const basename: string = path.basename(filename, path.extname(filename));
       const filepath: string = path.join(dirname, filename);
+
+      // check is it end with .js
+      if (!/\.js$/.test(filepath)) continue;
 
       // if this is a illegal middleware, will get a null as return value.
       const fn = this.requireMiddleware(filepath);
+      const basename: string = path.basename(filename, path.extname(filename));
 
       if (fn) {
         middlewareCol[basename] = fn;

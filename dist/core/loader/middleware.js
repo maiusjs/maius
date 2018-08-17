@@ -53,9 +53,11 @@ class MiddlewareLoader {
         }
         for (let i = 0; i < fileList.length; i += 1) {
             const filename = fileList[i];
-            const basename = path.basename(filename, path.extname(filename));
             const filepath = path.join(dirname, filename);
+            if (!/\.js$/.test(filepath))
+                continue;
             const fn = this.requireMiddleware(filepath);
+            const basename = path.basename(filename, path.extname(filename));
             if (fn) {
                 middlewareCol[basename] = fn;
             }
