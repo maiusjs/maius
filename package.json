@@ -1,6 +1,6 @@
 {
   "name": "maius",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A framework for Node.js",
   "main": "./dist/maius.js",
   "scripts": {
@@ -83,7 +83,6 @@
     },
     "testURL": "http://localhost/",
     "testRegex": "\\.test.ts$",
-
     "moduleFileExtensions": [
       "ts",
       "tsx",

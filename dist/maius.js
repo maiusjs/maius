@@ -4,43 +4,59 @@ const accepts = require("accepts");
 const assert = require("assert");
 const Cookies = require("cookies");
 const Debug = require("debug");
+const fs = require("fs");
 const http = require("http");
 const KoaApplication = require("koa");
 const path = require("path");
-const base_context_1 = require("./lib/base-context");
-const httpclient_1 = require("./lib/httpclient");
-const logger_1 = require("./lib/logger");
-const router_1 = require("./lib/router");
-const controller_1 = require("./loader/controller");
-const middleware_1 = require("./loader/middleware");
-const service_1 = require("./loader/service");
-const user_config_1 = require("./loader/user-config");
+const base_context_1 = require("./core/lib/base-context");
+const logger_1 = require("./core/lib/logger");
+const config_1 = require("./core/loader/config");
+const controller_1 = require("./core/loader/controller");
+const middleware_1 = require("./core/loader/middleware");
+const plugin_1 = require("./core/loader/plugin/plugin");
+const service_1 = require("./core/loader/service");
 const debug = Debug('maius:maius');
-const MIDDLEWARE_LOADER = Symbol('middleware_loader');
 const CONTROLLER_LOADER = Symbol('controller_loader');
 const SERVICE_LOADER = Symbol('service_loader');
+const dirname = {
+    CONFIG: 'src/config',
+    CONTROLLER: 'src/controller',
+    MIDDLEWARE: 'src/middleware',
+    PLUGIN: 'src/plugin',
+    ROUTER: 'src/router.js',
+    SERVICE: 'src/service',
+    STATIC: 'public',
+    VIEW: 'view',
+};
 class Maius extends KoaApplication {
     constructor(options) {
         super();
         this.errorHandler();
         assert(typeof options.rootDir === 'string', 'options.rootDir config error!');
+        this.dirname = dirname;
         this.options = options;
-        this.config = user_config_1.default.create(this.options).config;
-        this.logger = logger_1.default.create({
-            directory: this.config.logger.directory ||
-                path.resolve(this.options.rootDir + './logs'),
-            level: this.config.logger.level ||
-                (this.config.env === 'dev' ? 'DEBUG' : 'ERROR'),
-        }).getlogger();
+        this.config = new config_1.default(path.join(this.options.rootDir, dirname.CONFIG)).getConfig();
+        debug('maius config: %o', this.config);
+        this.logger = this.getLogger();
         this.env = this.config.env;
-        this.router = new router_1.default();
-        this.httpClient = httpclient_1.httpClient;
+        const pluginLoader = new plugin_1.default(this);
+        pluginLoader.loadPlugin([
+            { name: 'maius-logger' },
+            { name: 'maius-view' },
+            { name: 'maius-static', options: [
+                    path.join(this.options.rootDir, dirname.STATIC),
+                ] },
+        ]);
+        pluginLoader.loadExternalPlugin();
+        this.useMiddleware();
+        pluginLoader.loadPlugin([
+            { name: 'maius-router' },
+        ]);
         this.controller = this.controllerLoader.getIntancesCol();
         debug('this.controller %o', this.controller);
         this.service = this.serviceLoader.getIntancesCol();
         debug('this.service %o', this.service);
         this.loadUserRoutes();
-        this.useMiddleware();
     }
     listen(...args) {
         return new Promise((resolve, reject) => {
@@ -81,12 +97,21 @@ class Maius extends KoaApplication {
         context.state = {};
         return context;
     }
+    getLogger() {
+        const opts = this.config.logger
+            ? this.config.logger
+            : {
+                directory: path.join(this.options.rootDir, 'logs'),
+                level: 'DEBUG',
+            };
+        return logger_1.default.create(opts, this.options).getlogger();
+    }
     get controllerLoader() {
         if (this[CONTROLLER_LOADER]) {
             return this[CONTROLLER_LOADER];
         }
         this[CONTROLLER_LOADER] = new controller_1.default(this, {
-            path: path.join(this.options.rootDir, 'controller'),
+            path: path.join(this.options.rootDir, dirname.CONTROLLER),
         });
         return this[CONTROLLER_LOADER];
     }
@@ -95,22 +120,22 @@ class Maius extends KoaApplication {
             return this[SERVICE_LOADER];
         }
         this[SERVICE_LOADER] = new service_1.default(this, {
-            path: path.join(this.options.rootDir, 'service'),
+            path: path.join(this.options.rootDir, dirname.SERVICE),
         });
         return this[SERVICE_LOADER];
     }
-    get middlewareLoader() {
-        if (this[MIDDLEWARE_LOADER]) {
-            return this[MIDDLEWARE_LOADER];
-        }
-        this[MIDDLEWARE_LOADER] = new middleware_1.default(this);
-        return this[MIDDLEWARE_LOADER];
-    }
     useMiddleware() {
-        this.middlewareLoader.useAllMiddleware();
+        const dir = path.join(this.options.rootDir, dirname.MIDDLEWARE);
+        const middlewareLoader = new middleware_1.default(this, dir, this.config.middleware);
+        middlewareLoader.load();
     }
     loadUserRoutes() {
-        const router = require(path.join(this.options.rootDir, 'router.js'));
+        const filename = path.join(this.options.rootDir, dirname.ROUTER);
+        if (!fs.existsSync(filename)) {
+            debug(`Not found routes ${filename}`);
+            return;
+        }
+        const router = require(filename);
         assert('function' === typeof router, 'router.js must be a function type!');
         router({
             controller: this.controller,
