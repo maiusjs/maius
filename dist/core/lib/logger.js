@@ -5,7 +5,7 @@ const path = require("path");
 class Logger {
     constructor(config, options) {
         config.level = config.level || 'DEBUG';
-        config.directory = config.directory || path.resolve(options.rootDir);
+        config.directory = config.directory || path.resolve(options.rootDir, 'logs');
         const defAppenders = [];
         if ((config.level === 'DEBUG' && typeof config.stdout === 'undefined') ||
             config.stdout) {

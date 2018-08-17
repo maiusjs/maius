@@ -23,7 +23,7 @@ export default class Logger {
   constructor(config: ILoggerConfig, options: IOptions) {
 
     config.level = config.level || 'DEBUG';
-    config.directory = config.directory || path.resolve(options.rootDir);
+    config.directory = config.directory || path.resolve(options.rootDir, 'logs');
 
     const defAppenders = [];
     if ((config.level === 'DEBUG' && typeof config.stdout === 'undefined') ||
