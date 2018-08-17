@@ -11,11 +11,11 @@ describe('load one mock plugin', () => {
   // load the plugin
   pluginOneLoader.load();
 
-  test('load middleware in plugin', () => {
+  test('middlewares in the plugin should be loaded successfully', () => {
     expect(app.middleware.length).toBe(2);
   });
 
-  test('pluginLoader properties', () => {
+  test('check the public properties of pluginOneLoader', () => {
     expect(pluginOneLoader.directory).toEqual({
       config: path.join(pluginPath, 'config'),
       middleware: path.join(pluginPath, 'middleware'),
