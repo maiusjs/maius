@@ -30,12 +30,22 @@
 - [ ] 支持 extend
 - [ ] plugin 支持 extend
 
-- [ ] router.js 变更路由配置方法（同时保留原来的配置方法）
-
+- [ ] maius-router 支持自动匹配路由
+    ```
+      '/'           --->   index.index
+      '/home'       --->   home.index
+      '/home/panel' --->   home.panel
+    ```
+- [ ] router.js 变更路由自定义配置方法（同时保留原来的配置方法）
     ```js
     module.exports = [
-        { match: '/', handle: 'home.info' },
-        { match: '/user/:id', handle: ['user.verify', 'user.home'] }
+      ['/home', 'home.index'],
+      ['/user/:id', user.person],
+    ],
+
+    module.exports = [
+        { pathname: '/', handle: 'index.info' },
+        { pathname: '/user/:id', handle: ['user.verify', 'user.person'] }
     ]
     ```
 
