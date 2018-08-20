@@ -1,12 +1,15 @@
+import * as Debug from 'debug';
 import { Middleware } from 'koa';
 import * as serve from 'koa-static';
 import * as path from 'path';
-import { IPluginOptions } from '../../core/loader/plugin/plugin-one';
+import { IPluginConfig } from '../../core/loader/plugin/plugin-one';
 import Maius from '../../maius';
+
+const debug = Debug('maius:MaiusStatic');
 
 type MiddlewareList = ((...args: any[]) => Middleware)[];
 
-interface IStaticOptions extends IPluginOptions {
+interface IStaticOptions extends IPluginConfig {
   options?: string[] | { root: string, options: serve.Options }[];
 }
 
@@ -14,10 +17,14 @@ export default class MaiusStatic {
   public middleware: MiddlewareList;
 
   private app: Maius;
+
+  /**
+   * @prop this.options.name - 'maius-static'
+   * @prop this.options.options {string[] | {root, options}[]}
+   */
   private options: IStaticOptions;
 
   /**
-   *
    * @param app
    * @param {IMaiusStaticOptItem} config.options
    */
@@ -41,10 +48,11 @@ export default class MaiusStatic {
     }
 
     /**
-     * @pararm this.options.name - 'maius-static'
-     * @pararm this.options.options {string[] | {root, options}[]}
+     * @prop this.options.name - 'maius-static'
+     * @prop this.options.options {string[] | {root, options}[]}
      */
     const opts = this.options.options;
+    debug('config: %o', opts);
 
     for (let i = 0; i < opts.length; i += 1) {
       const item = opts[i];
@@ -60,6 +68,7 @@ export default class MaiusStatic {
         options = item.options;
       }
 
+      debug('root: %s, options: %o', root, options);
       this.app.use(serve(root, options));
     }
   }

@@ -2,13 +2,13 @@ import * as Debug from 'debug';
 import * as fs from 'fs';
 import * as path from 'path';
 import Maius from '../../../maius';
-import PluginOneLoader, { IPluginOptions } from './plugin-one';
+import PluginOneLoader, { IPluginConfig } from './plugin-one';
 
 const debug = Debug('maius:PluginListLoader');
 
 export interface IPluginItem {
   dirname: string;
-  config: IPluginOptions;
+  config: IPluginConfig;
 }
 
 export default class PluginListLoader {

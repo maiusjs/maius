@@ -16,7 +16,7 @@ export interface IPlugin {
 /**
  * plugin config
  */
-export interface IPluginOptions {
+export interface IPluginConfig {
   name: string;
   [x: string]: any;
 }
@@ -42,7 +42,7 @@ export default class PluginOneLoader {
    * Plugin config collection.
    * @since 0.1.0
    */
-  public options: IPluginOptions;
+  public targetConfig: IPluginConfig;
 
   /**
    * the config in the plugin/config
@@ -57,12 +57,12 @@ export default class PluginOneLoader {
    *
    * @param app the maius instance.
    * @param dirname the target plugin directory.
-   * @param options target plugin config.
+   * @param targetConfig target plugin config.
    */
-  constructor(app: Maius, dirname: string, options: IPluginOptions) {
+  constructor(app: Maius, dirname: string, targetConfig: IPluginConfig) {
     this.app = app;
     this.dirname = dirname;
-    this.options = options;
+    this.targetConfig = targetConfig;
 
     this.directory = {
       config: path.join(this.dirname, 'config'),
@@ -81,7 +81,7 @@ export default class PluginOneLoader {
    * Load plugin
    */
   public load(): void {
-    debug('load plugin - %s', this.options.name);
+    debug('load plugin - %s', this.targetConfig.name);
 
     // call the entry file
     this.callEntry();
@@ -95,7 +95,7 @@ export default class PluginOneLoader {
         this.app,
         path.join(this.dirname, 'middleware'),
         this.config.middleware,
-      ).load(this.options);
+      ).load(this.targetConfig);
     }
   }
 
@@ -116,7 +116,7 @@ export default class PluginOneLoader {
 
     try {
       const content = require(pluginPath);
-      callClassOrFn(content, [this.app, this.options]);
+      callClassOrFn(content, [this.app, this.targetConfig]);
     } catch (error) {
       console.error(error);
       throw new Error(`The plugin.(js|ts) is not a class or function in ${pluginPath}`);

@@ -45,10 +45,8 @@ export default class MiddlewareLoader {
   constructor(app: Maius, dirname: string, config: IMiddlewareConfig[]) {
     this.app = app;
     this.config = Array.isArray(config) ? config : [];
-    this.middlewareConfigList = [];
+    this.middlewareConfigList = this.handleMiddlewareConfig();
     this.middlewareFnCol = this.collectMiddleware(dirname);
-
-    this.handleMiddlewareConfig();
 
     debug('fitered config: %o', this.middlewareConfigList);
   }
@@ -119,9 +117,13 @@ export default class MiddlewareLoader {
       // check is it end with .js
       if (!/\.js$/.test(filepath)) continue;
 
+      const basename: string = path.basename(filename, path.extname(filename));
+
+      // it isn't writen in config
+      if (!this.isInConfig(basename)) continue;
+
       // if this is a illegal middleware, will get a null as return value.
       const fn = this.requireMiddleware(filepath);
-      const basename: string = path.basename(filename, path.extname(filename));
 
       if (fn) {
         middlewareCol[basename] = fn;
@@ -129,6 +131,20 @@ export default class MiddlewareLoader {
     }
 
     return middlewareCol;
+  }
+
+  /**
+   * Does user has been to set this middleware name into config?
+   */
+  private isInConfig(name): boolean {
+    let done = false;
+    for (let i = 0; i < this.middlewareConfigList.length; i += 1) {
+      const middleware = this.middlewareConfigList[i];
+      if (name === middleware.name) {
+        done = true;
+      }
+    }
+    return done;
   }
 
   /**
@@ -157,6 +173,7 @@ export default class MiddlewareLoader {
    * the middlware that the property enable is false.
    */
   private handleMiddlewareConfig() {
+    const list: IMiddlewareConfig[] = [];
 
     for (let i = 0; i < this.config.length; i += 1) {
       const item = this.config[i];
@@ -171,31 +188,35 @@ export default class MiddlewareLoader {
         continue;
       }
 
-      // push item into this.middleware
-      this.proxyPushItem(item);
+      // push item into list.
+      // and the item also not be pushed in some conditions.
+      this.proxyPushItem(list, item);
     }
+
+    return list;
   }
 
   /**
-   * Use this method instead of this.middlwareList.push.
+   * Using this method to push a item into middleware config array.
    * This method will filter some middleware config by follow condition:
    *    1. if there are same name between two middleware. the latter will
    *       replace the former.
    *
+   * @param array - middleware config array
    * @param item - one middleware config
    */
-  private proxyPushItem(item) {
-    for (let i = 0; i < this.middlewareConfigList.length; i += 1) {
-      const middlewareConfig = this.middlewareConfigList[i];
+  private proxyPushItem(array: IMiddlewareConfig[], item: IMiddlewareConfig) {
+    for (let i = 0; i < array.length; i += 1) {
+      const middlewareConfig = array[i];
 
       // if there are two same middleware, the latter will replace the former.
       if (middlewareConfig.name === item.name) {
-        this.middlewareConfigList.splice(i, 1, item);
+        array.splice(i, 1, item);
         return;
       }
     }
 
-    this.middlewareConfigList.push(item);
+    array.push(item);
   }
 
   /**
