@@ -16,7 +16,8 @@
     "array-type": [
       true,
       "array"
-    ]
+    ],
+    "object-literal-sort-keys": [true, "shorthand-first"]
   },
   "rulesDirectory": []
 }
