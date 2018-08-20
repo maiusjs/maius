@@ -18,7 +18,6 @@ export interface IPlugin {
  */
 export interface IPluginConfig {
   name: string;
-  [x: string]: any;
 }
 
 export default class PluginOneLoader {

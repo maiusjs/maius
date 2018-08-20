@@ -9,7 +9,7 @@ const debug = Debug('maius:MaiusStatic');
 
 type MiddlewareList = ((...args: any[]) => Middleware)[];
 
-interface IStaticOptions extends IPluginConfig {
+export interface IStaticConfig extends IPluginConfig {
   options?: string[] | { root: string, options: serve.Options }[];
 }
 
@@ -22,15 +22,15 @@ export default class MaiusStatic {
    * @prop this.options.name - 'maius-static'
    * @prop this.options.options {string[] | {root, options}[]}
    */
-  private options: IStaticOptions;
+  private config: IStaticConfig;
 
   /**
    * @param app
    * @param {IMaiusStaticOptItem} config.options
    */
-  constructor(app: Maius, options: IStaticOptions) {
+  constructor(app: Maius, config: IStaticConfig) {
     this.app = app;
-    this.options = options;
+    this.config = config;
 
     this.useMiddleware();
   }
@@ -39,10 +39,10 @@ export default class MaiusStatic {
    * use middleware
    */
   private useMiddleware(): void {
-    if (!Array.isArray(this.options.options)) {
+    if (!Array.isArray(this.config.options)) {
       console.warn(
         'Expect an array as the options.options, but got a',
-        typeof this.options.options,
+        typeof this.config.options,
       );
       return;
     }
@@ -51,7 +51,7 @@ export default class MaiusStatic {
      * @prop this.options.name - 'maius-static'
      * @prop this.options.options {string[] | {root, options}[]}
      */
-    const opts = this.options.options;
+    const opts = this.config.options;
     debug('config: %o', opts);
 
     for (let i = 0; i < opts.length; i += 1) {

@@ -16,6 +16,7 @@ import ControllerLoader from './core/loader/controller';
 import MiddlewareLoader, { IMiddlewareConfig } from './core/loader/middleware';
 import PluginLoader from './core/loader/plugin/plugin';
 import ServiceLoader from './core/loader/service';
+import { IStaticConfig } from './plugin/maius-static/plugin';
 
 export type MaiusContext = KoaApplication.Context;
 
@@ -123,14 +124,16 @@ class Maius extends KoaApplication {
       /**
        * @since 0.1.0
        */
-      { name: 'maius-static', options: [
-        path.join(this.options.rootDir, dirname.STATIC),
-      ]},
+      this.pluginStatic(),
+      // { name: 'maius-static', options: [
+      //   path.join(this.options.rootDir, dirname.STATIC),
+      // ]},
     ]);
 
     // load external plugin
     pluginLoader.loadExternalPlugin();
 
+    // load user middleware
     this.useMiddleware();
 
     // router middleware have to be used after other middleware.
@@ -276,6 +279,20 @@ class Maius extends KoaApplication {
       path: path.join(this.options.rootDir, dirname.SERVICE),
     });
     return this[SERVICE_LOADER];
+  }
+
+  private pluginStatic(): IStaticConfig {
+    const config = this.config.static;
+    console.log('====', config);
+    const options: IStaticConfig['options'] = Array.isArray(config)
+      ? config
+      : [path.join(this.options.rootDir, dirname.STATIC)]; // default
+
+    console.log();
+    return {
+      options,
+      name: 'maius-static',
+    };
   }
 
   /**

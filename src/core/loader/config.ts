@@ -1,6 +1,7 @@
 import * as Debug from 'debug';
 import * as fs from 'fs';
 import * as path from 'path';
+import { IStaticConfig } from '../../plugin/maius-static/plugin';
 import { isObject } from '../utils/type';
 import { IMiddlewareConfig } from './middleware';
 
@@ -60,6 +61,7 @@ export interface IConfig {
   plugin?: { name: string, [x: string]: any }[];
   logger?: ILoggerConfig;
   view?: IViewConfig;
+  static?: IStaticConfig['options'];
   [x: string]: any;
 }
 
