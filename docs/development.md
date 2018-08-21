@@ -7,9 +7,10 @@ koa
     Maius Class
         Loader
             ConfiLoader
-            MiddlewareLoader
             ControllerLoader
             ServiceLoader
+            MiddlewareLoader
+                internal middleware
             PluginLoader
                 internal plugin
 ```
