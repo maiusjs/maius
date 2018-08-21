@@ -30,7 +30,7 @@ const CONTROLLER_LOADER = Symbol('controller_loader');
 const SERVICE_LOADER = Symbol('service_loader');
 
 const dirname = {
-  CONFIG: 'src/config',
+  CONFIG: 'config',
   CONTROLLER: 'src/controller',
   MIDDLEWARE: 'src/middleware',
   PLUGIN: 'src/plugin',
@@ -283,7 +283,6 @@ class Maius extends KoaApplication {
 
   private pluginStatic(): IStaticConfig {
     const config = this.config.static;
-    console.log('====', config);
     const options: IStaticConfig['options'] = Array.isArray(config)
       ? config
       : [path.join(this.options.rootDir, dirname.STATIC)]; // default
