@@ -45,15 +45,59 @@ class Maius extends KoaApplication {
   public static Service = BaseContext;
   public static Logger = Logger;
 
+  /**
+   * @since 0.1.0
+   */
   public version: string;
+
+  /**
+   * user options
+   * @since 0.1.0
+   */
   public options: IOptions;
+
+  /**
+   * UserConfigLoader is a single instance class. And the instance will be
+   * created here.
+   * @since 0.1.0
+   */
   public config: IConfig;
+
+  /**
+   * @since 0.1.0
+   */
   public router: Router;
+
+  /**
+   * @since 0.1.0
+   */
   public dirname: typeof dirname;
+
+  /**
+   * controller instances collection
+   * @since 0.1.0
+   */
   public controller: { [x: string]: BaseContext };
+
+  /**
+   * service instances collection
+   * @since 0.1.0
+   */
   public service: { [x: string]: BaseContext };
+
+  /**
+   * @since 0.1.0
+   */
   public logger: log4js.Logger;
+
+  /**
+   * @since 0.1.0
+   */
   public httpClient: HttpClient;
+
+  /**
+   * @since 0.1.0
+   */
   public ctx: KoaApplication.Context;
 
   /**
@@ -62,7 +106,6 @@ class Maius extends KoaApplication {
    * @param [options.rootDir] the directory of user application
    * @param [options.port] the port of user appliction will run at
    */
-
   constructor(options: IOptions) {
     super();
 
@@ -75,37 +118,16 @@ class Maius extends KoaApplication {
 
     this.version = this.getPackageJSON().version;
 
-    /**
-     * @since 0.1.0
-     */
     this.dirname = dirname;
 
-    /**
-     * user options
-     *
-     * @since 0.1.0
-     */
     this.options = options;
 
-    /**
-     * UserConfigLoader is a single instance class. And the instance will be
-     * created here.
-     *
-     * @since 0.1.0
-     */
     this.config = new configLoader(path.join(this.options.rootDir, dirname.CONFIG)).getConfig();
 
     debug('maius config: %o', this.config);
 
-    /**
-     * @since 0.1.0
-     */
     this.logger = this.getLogger();
-    /**
-     * Koa appliction instance
-     *
-     * @since 0.1.0
-     */
+
     this.env = this.config.env;
 
     // pluin loader
@@ -113,21 +135,21 @@ class Maius extends KoaApplication {
 
     // load internal plugin
     pluginLoader.loadPlugin([
+
       /**
        * @since 0.1.0
        */
       { name: 'maius-logger' },
+
       /**
        * @since 0.1.0
        */
       { name: 'maius-view' },
+
       /**
        * @since 0.1.0
        */
       this.pluginStatic(),
-      // { name: 'maius-static', options: [
-      //   path.join(this.options.rootDir, dirname.STATIC),
-      // ]},
     ]);
 
     // load external plugin
@@ -145,34 +167,20 @@ class Maius extends KoaApplication {
       { name: 'maius-router' },
     ]);
 
-    /**
-     * controller instances collection
-     *
-     * @since 0.1.0
-     */
     this.controller = this.controllerLoader.getIntancesCol();
 
     debug('this.controller %o', this.controller);
 
-    /**
-     * service instances collection
-     *
-     * @since 0.1.0
-     */
     this.service = this.serviceLoader.getIntancesCol();
 
     debug('this.service %o', this.service);
 
-    /**
-     * load user routes.
-     */
     this.loadUserRoutes();
   }
 
   /**
    * promisify listen method
    */
-
   public listen(...args): any {
     return new Promise((resolve, reject) => {
       if (args.length === 0) {
@@ -200,7 +208,6 @@ class Maius extends KoaApplication {
    * @param req IncomingMessage
    * @param res ServerResponse
    */
-
   public createContext(
     req: http.IncomingMessage,
     res: http.ServerResponse,
@@ -269,7 +276,6 @@ class Maius extends KoaApplication {
    *
    * @private
    */
-
   private get serviceLoader(): ServiceLoader {
     if (this[SERVICE_LOADER]) {
       return this[SERVICE_LOADER];
@@ -299,7 +305,6 @@ class Maius extends KoaApplication {
    *
    * @private
    */
-
   private useMiddleware(): void {
     const dir = path.join(this.options.rootDir, dirname.MIDDLEWARE);
     const middlewareLoader = new MiddlewareLoader(
@@ -313,7 +318,6 @@ class Maius extends KoaApplication {
   /**
    * @private
    */
-
   private loadUserRoutes(): void {
     const filename = path.join(this.options.rootDir, dirname.ROUTER);
     if (!fs.existsSync(filename)) {
@@ -333,7 +337,6 @@ class Maius extends KoaApplication {
   /**
    * @private
    */
-
   private errorHandler() {
     this.on('error', e => {
       this.logger.error(e);
