@@ -1,6 +1,6 @@
 {
   "name": "maius",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "A framework for Node.js",
   "main": "./dist/maius.js",
   "scripts": {
@@ -86,7 +86,10 @@
     "collectCoverageFrom": [
       "src/**"
     ],
-    "coverageReporters": ["json", "lcov"],
+    "coverageReporters": [
+      "json",
+      "lcov"
+    ],
     "moduleFileExtensions": [
       "ts",
       "tsx",
