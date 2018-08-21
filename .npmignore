@@ -9,3 +9,9 @@ test/coverage
 dev
 demo
 .vscode
+
+# project config
+_config.yml
+.editorconfig
+.travis.yml
+.tslint.json
