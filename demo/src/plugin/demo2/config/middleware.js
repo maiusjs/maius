@@ -1,6 +1,6 @@
 module.exports = [
   {
     args: ['nihao'],
-    name: 'ddemo',
+    handle: 'ddemo',
   }
 ];

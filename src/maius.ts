@@ -16,6 +16,7 @@ import ControllerLoader from './core/loader/controller';
 import MiddlewareLoader, { IMiddlewareConfig } from './core/loader/middleware';
 import PluginLoader from './core/loader/plugin/plugin';
 import ServiceLoader from './core/loader/service';
+import { isFunction } from './core/utils/type';
 import { IStaticConfig } from './plugin/maius-static/plugin';
 
 export type MaiusContext = KoaApplication.Context;
@@ -152,6 +153,8 @@ class Maius extends KoaApplication {
       this.pluginStatic(),
     ]);
 
+    this.useInternalMiddleware();
+
     // load external plugin
     pluginLoader.loadExternalPlugin();
 
@@ -287,17 +290,50 @@ class Maius extends KoaApplication {
     return this[SERVICE_LOADER];
   }
 
+  /**
+   * get maius-static plugin options
+   */
   private pluginStatic(): IStaticConfig {
     const config = this.config.static;
     const options: IStaticConfig['options'] = Array.isArray(config)
       ? config
       : [path.join(this.options.rootDir, dirname.STATIC)]; // default
 
-    console.log();
     return {
       options,
       name: 'maius-static',
     };
+  }
+
+  /**
+   * use all maius internal middleware
+   */
+  private useInternalMiddleware(): void {
+    const dir = path.resolve(__dirname, 'middleware');
+    if (!fs.existsSync(dir)) {
+      return;
+    }
+
+    const mdwConfigs: IMiddlewareConfig[] = [];
+    const list = fs.readdirSync(dir);
+
+    for (let i = 0; i < list.length; i += 1) {
+      const filename = list[i];
+      // then filenme must end with .js
+      if (!/\.js$/.test(filename)) continue;
+
+      const content = require(path.join(dir, filename));
+
+      if (isFunction(content)) {
+        mdwConfigs.push({ handle: content });
+      }
+    }
+
+    new MiddlewareLoader(
+      this,
+      dir,
+      mdwConfigs,
+    ).load();
   }
 
   /**

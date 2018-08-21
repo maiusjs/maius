@@ -8,9 +8,9 @@ import { isFunction } from '../utils/type';
 const debug = Debug('maius:MiddlewareLoader');
 
 export interface IMiddlewareConfig {
-  name: string | ((...args: any[]) => Middleware);
+  handle: string | ((...args: any[]) => Middleware);
   args?: any[];
-  options: any;
+  options?: any;
   disabled?: boolean;
 }
 
@@ -60,7 +60,7 @@ export default class MiddlewareLoader {
 
     for (let i = 0; i < this.middlewareConfigList.length; i += 1) {
       const itemConfig: IMiddlewareConfig = this.middlewareConfigList[i];
-      const name = itemConfig.name;
+      const name = itemConfig.handle;
       let mdw: (...args: any[]) => Middleware = null;
 
       // name as Middleware
@@ -140,7 +140,7 @@ export default class MiddlewareLoader {
     let done = false;
     for (let i = 0; i < this.middlewareConfigList.length; i += 1) {
       const middleware = this.middlewareConfigList[i];
-      if (name === middleware.name) {
+      if (name === middleware.handle) {
         done = true;
       }
     }
@@ -210,7 +210,7 @@ export default class MiddlewareLoader {
       const middlewareConfig = array[i];
 
       // if there are two same middleware, the latter will replace the former.
-      if (middlewareConfig.name === item.name) {
+      if (middlewareConfig.handle === item.handle) {
         array.splice(i, 1, item);
         return;
       }
@@ -227,24 +227,24 @@ export default class MiddlewareLoader {
    *
    * @param config - one middleware config
    */
-  private checkSafe(config, index) {
-    const { name, args, disabled } = config;
+  private checkSafe(config: IMiddlewareConfig, index: number) {
+    const { handle, args, disabled } = config;
 
-    if ('string' !== typeof name && 'function' !== typeof name) {
-      console.warn(`Expect config.middleware[${index}].name is a string or function,\
-but accept ${typeof name}.`);
+    if ('string' !== typeof handle && 'function' !== typeof handle) {
+      console.warn(`Expect config.middleware[${index}].handle is a string or function,\
+ but accept ${typeof handle}.`);
       return false;
     }
 
     if (args && !Array.isArray(args)) {
       console.warn(`Expect config.middleware[${index}].args is an array,\
-but accept ${typeof name}.`);
+ but accept ${typeof args}.`);
       return false;
     }
 
     if (disabled !== undefined && 'boolean' !== typeof disabled) {
       console.warn(`Expect config.middleware[${index}].disabled is a boolean,\
-but accept ${typeof name}.`);
+ but accept ${typeof disabled}.`);
       return false;
     }
 

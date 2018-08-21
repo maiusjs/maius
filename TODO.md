@@ -16,6 +16,8 @@
 - [x] maius-static 实现静态资源服务
 - [x] ~~maius-static 中间件在洋葱模型中的位置可以通过配置来调整~~
 
+- [ ] 优化用户 plugin/config/middleware.js 配置错误提示
+
 - [x] 增强 config 的配置
   - [x] 支持不同环境下加载不同 config (eg: config/env/production)
   - [x] 多文件的 config (eg: config/view.js 等效于 config/config.js 中的 view 字段)
