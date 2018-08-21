@@ -5,8 +5,7 @@ npm-debug.log
 # test coverage
 test/coverage
 
-
 # maius development dist directory
 dev
-demo/**/logs
-dist
+demo
+.vscode
