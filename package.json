@@ -4,7 +4,7 @@
   "description": "A framework for Node.js",
   "main": "./dist/maius.js",
   "scripts": {
-    "test": "jest --coverage",
+    "test": "jest",
     "dist": "node_modules/.bin/gulp dist:prd",
     "dev": "DEBUG=maius:* node_modules/.bin/gulp dev",
     "dev:plugin": "DEBUG=maius:Plugin* node_modules/.bin/gulp dev",
@@ -83,6 +83,11 @@
     },
     "testURL": "http://localhost/",
     "testRegex": "\\.test.ts$",
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "src/**"
+    ],
+    "coverageReporters": ["json", "lcov"],
     "moduleFileExtensions": [
       "ts",
       "tsx",
