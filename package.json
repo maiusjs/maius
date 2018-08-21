@@ -1,14 +1,14 @@
 {
   "name": "maius",
-  "version": "0.0.3",
+  "version": "0.0.6",
   "description": "A framework for Node.js",
   "main": "./dist/maius.js",
   "scripts": {
     "test": "jest",
     "dist": "node_modules/.bin/gulp dist:prd",
     "dev": "DEBUG=maius:* node_modules/.bin/gulp dev",
-    "preversion": "npm run dist",
-    "version": "npm run dist && git add --all dist",
+    "dev:plugin": "DEBUG=maius:Plugin* node_modules/.bin/gulp dev",
+    "preversion": "npm run test && npm run dist",
     "postversion": "npm publish"
   },
   "repository": {
@@ -34,6 +34,7 @@
     "is-generator-function": "^1.0.7",
     "kcors": "^2.2.1",
     "koa": "^2.5.1",
+    "koa-bodyparser": "^4.2.1",
     "koa-convert": "^1.2.0",
     "koa-morgan": "^1.0.1",
     "koa-router": "^7.4.0",
@@ -75,11 +76,20 @@
     "typescript": "^2.9.1"
   },
   "jest": {
+    "coverageDirectory": "./test/coverage/",
     "transform": {
       "^.+\\.tsx?$": "ts-jest"
     },
     "testURL": "http://localhost/",
-    "testRegex": "(/test/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "testRegex": "\\.test.ts$",
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "src/**"
+    ],
+    "coverageReporters": [
+      "json",
+      "lcov"
+    ],
     "moduleFileExtensions": [
       "ts",
       "tsx",

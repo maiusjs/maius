@@ -5,8 +5,13 @@ npm-debug.log
 # test coverage
 test/coverage
 
-
 # maius development dist directory
 dev
-demo/**/logs
-dist
+demo
+.vscode
+
+# project config
+_config.yml
+.editorconfig
+.travis.yml
+.tslint.json

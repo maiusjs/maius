@@ -9,3 +9,5 @@ const app = new Maius({
 app.listen(3123).then(() => {
   console.log('http://localhost:3123');
 });
+
+console.log(app.path);
