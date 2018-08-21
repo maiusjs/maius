@@ -21,9 +21,16 @@ export default class Logger {
   }
 
   constructor(config: ILoggerConfig, options: IOptions) {
+    const level: string = config.level || 'DEBUG';
+    let directory: string;
 
-    config.level = config.level || 'DEBUG';
-    config.directory = config.directory || path.resolve(options.rootDir, 'logs');
+    if (config.directory) {
+      directory = path.isAbsolute(config.directory)
+        ? config.directory
+        : path.join(options.rootDir, config.directory);
+    } else {
+      directory = path.resolve(options.rootDir, 'logs');
+    }
 
     const defAppenders = [];
     if ((config.level === 'DEBUG' && typeof config.stdout === 'undefined') ||
@@ -35,18 +42,18 @@ export default class Logger {
       appenders: {
         access: {
           category: 'http',
-          filename: path.join(config.directory, '/access.log'),
+          filename: path.join(directory, '/access.log'),
           pattern: '-yyyy-MM-dd',
           type: 'dateFile',
         },
         app: {
-          filename: path.join(config.directory, '/app.log'),
+          filename: path.join(directory, '/app.log'),
           maxLogSize: 1048 * 1048,
           numBackups: 5,
           type: 'file',
         },
         errorFile: {
-          filename:  path.join(config.directory, '/errors.log'),
+          filename:  path.join(directory, '/errors.log'),
           type: 'file',
         },
         errors: {
@@ -58,8 +65,8 @@ export default class Logger {
       },
 
       categories: {
-        default: { appenders: ['app', 'errors', ...defAppenders], level: config.level },
-        http: { appenders: ['access'], level: config.level },
+        default: { level, appenders: ['app', 'errors', ...defAppenders] },
+        http: { level, appenders: ['access'] },
       },
     });
   }

@@ -1,4 +1,4 @@
 module.exports = {
-  directory: __dirname + '/../../logs',
+  directory: 'logs',
   level: 'DEBUG',
 };
