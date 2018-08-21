@@ -6,9 +6,13 @@ import PluginOneLoader, { IPluginConfig } from './plugin-one';
 
 const debug = Debug('maius:PluginListLoader');
 
+interface IAnyPluginConfig extends IPluginConfig {
+  [x: string]: any;
+}
+
 export interface IPluginItem {
   dirname: string;
-  config: IPluginConfig;
+  config: IAnyPluginConfig;
 }
 
 export default class PluginListLoader {
